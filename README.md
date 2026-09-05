@@ -115,4 +115,9 @@ builds become useful — it is not required for local builds.
   cut-pattern import)
 - ETV Gain / KP (constant power) area for high RPM (chapter 3.2)
 - Gearbox ratio import (Gearbox DataSubset)
-- Licensing
+- The original tool's software activation scheme (email-based `.req`/`.lic`
+  file exchange) — this project has no such licensing/activation mechanism
+
+## License
+
+MIT — see [LICENSE](LICENSE). Contributions and improvements are welcome.
