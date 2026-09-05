@@ -47,10 +47,16 @@ The browser opens automatically at `http://localhost:8501`.
 - Editable, RPM × Pedal → Target torque
 - Import via CSV, Excel, or `.dss` (with a selection dropdown if a file
   contains multiple tables, e.g. one per gear)
-- **Generate demand curve**: automatically creates a concave "1:1-feel" curve
-  (Target torque = Engine max torque(RPM) × target fraction × (Pedal/100)^n,
-  n<1) with fine gas breakpoints near 0% – see chapter 3.1 of the book for
-  the rationale (linear curves feel "soft at the start, harsh at the end")
+- **Generate demand curve**: pick from example curves — cable-like feel
+  (concave, n<1, mimics a 1:1 gas/throttle cable), linear, corner-exit
+  precision (convex, n>1, keeps the low-to-mid pedal range fine for
+  corner-exit throttle dosing while ramping up quickly once you commit to
+  full power), or a fully custom S-curve with an adjustable fine-control
+  zone boundary and transition sharpness. A live chart previews the curve
+  shape as you move the sliders. Both the gas breakpoints (fine near 0% to
+  match real ECU exports) and the RPM breakpoints for the generated table are
+  editable; max torque is linearly interpolated from the engine table for any
+  RPM not falling exactly on one of its breakpoints.
 
 **3) Calculation (ETV MAP)**
 - Editable RPM and pedal breakpoints for the output table (default: RPM axis

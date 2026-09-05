@@ -143,6 +143,11 @@ def bilinear_lookup(df, rpm, pedal):
     )
 
 
+def fmt_num(v):
+    v = float(v)
+    return str(int(v)) if v == int(v) else str(v)
+
+
 def invert_row(torque_curve, throttle_bp, target, tolerance, use_last_at_max):
     """Given one RPM row of the engine map (torque over throttle), find the TPS
     that yields `target` Nm. Returns (tps, status) where status in
@@ -198,44 +203,118 @@ with col2:
     st.subheader("2) Demand Table (TORQUE TARGET)")
     st.caption("Rows = RPM, columns = Pedal [%], values = Target torque [Nm]")
 
-    with st.expander("Generate demand curve (concave 1:1-feel curve)"):
+    with st.expander("Generate demand curve"):
         st.caption(
-            "Per chapter 3.1 of 'A Practical Guide to Race Motorbike Electronics': "
-            "a linearly rising target-torque curve feels 'soft at the start, harsh at "
-            "the end' to riders, because a classic 1:1 gas/throttle cable connection "
-            "naturally delivers a lot of torque gain in the first 50–60% of gas travel "
-            "and little afterwards. This function generates: Target torque = Engine "
-            "max torque(RPM) × target fraction × (Pedal/100)^n. With n<1 you get a "
-            "concave curve (steep rise at the start, flattening towards the end) for a "
-            "natural feel."
+            "A linearly rising target-torque curve tends to feel 'soft at the start, "
+            "harsh at the end' to riders used to a 1:1 gas/throttle cable, since a cable "
+            "naturally delivers a lot of torque gain in the first 50–60% of travel and "
+            "little afterwards (chapter 3.1, 'A Practical Guide to Race Motorbike "
+            "Electronics'). But the whole point of ride-by-wire is that you are **not** "
+            "bound to replicate that cable feel: you can instead put the finest control "
+            "exactly where precise dosing matters most, e.g. through the low-to-mid "
+            "pedal range used for corner-exit throttle application, and let torque ramp "
+            "up quickly only once you commit to full power. Pick a preset below or shape "
+            "your own curve; the preview updates live as you move the sliders."
         )
+
+        preset = st.selectbox(
+            "Example curve",
+            [
+                "Cable-like feel (concave, fine near closed throttle)",
+                "Linear (1:1 gain throughout)",
+                "Corner-exit precision (convex, fine through low/mid pedal)",
+                "S-curve (custom fine-control zone)",
+            ],
+        )
+
+        def power_shape(x, n):
+            return x ** n
+
+        def s_curve_shape(x, center, steepness):
+            raw = 1.0 / (1.0 + np.exp(-steepness * (x - center)))
+            lo, hi = 1.0 / (1.0 + np.exp(steepness * center)), 1.0 / (1.0 + np.exp(-steepness * (1 - center)))
+            return (raw - lo) / (hi - lo)
+
+        if preset == "Cable-like feel (concave, fine near closed throttle)":
+            shape_n = 0.6
+            shape_fn = lambda x: power_shape(x, shape_n)
+            st.caption(f"n = {shape_n} (fixed for this preset)")
+        elif preset == "Linear (1:1 gain throughout)":
+            shape_n = 1.0
+            shape_fn = lambda x: power_shape(x, shape_n)
+            st.caption(f"n = {shape_n} (fixed for this preset)")
+        elif preset == "Corner-exit precision (convex, fine through low/mid pedal)":
+            shape_n = 1.8
+            shape_fn = lambda x: power_shape(x, shape_n)
+            st.caption(f"n = {shape_n} (fixed for this preset) – flat/precise through low-mid pedal, steep near full gas")
+        else:
+            sc1, sc2 = st.columns(2)
+            with sc1:
+                center = st.slider(
+                    "Fine-control zone boundary [% pedal]",
+                    min_value=5, max_value=95, value=60, step=5,
+                    help="Below this pedal position the curve stays flat (fine dosing, "
+                         "e.g. for corner-exit modulation); above it torque ramps up "
+                         "quickly.",
+                )
+            with sc2:
+                steepness = st.slider(
+                    "Transition sharpness",
+                    min_value=2.0, max_value=20.0, value=8.0, step=1.0,
+                    help="Higher = narrower, more sudden transition from fine control "
+                         "to full power.",
+                )
+            shape_fn = lambda x: s_curve_shape(x, center / 100.0, steepness)
+
         gc1, gc2 = st.columns(2)
         with gc1:
-            shape_n = st.slider(
-                "Curve shape n (Target torque ~ Pedal^n)",
-                min_value=0.3, max_value=1.5, value=0.6, step=0.05,
-                help="n<1: steep rise at the start, flat at the end (recommended for a "
-                     "natural feel). n=1: linear. n>1: soft start, steep at the end "
-                     "(classic 'progressive' in the comfort sense, unusual for racing).",
-            )
-        with gc2:
             max_fraction = st.number_input(
                 "Target torque at 100% gas [% of engine max]",
                 min_value=10.0, max_value=100.0, value=100.0, step=5.0,
             )
-        gas_bp_input = st.text_input(
-            "Gas breakpoints [%] (comma-separated, fine near 0% – as in real ECU exports)",
-            value="0,2,3,4,5,6,7,8,9,10,12.5,15,17.5,20,22.5,25,30,40,50,60,70,80,90,100",
+        with gc2:
+            gas_bp_input = st.text_input(
+                "Gas breakpoints [%] (comma-separated, fine near 0% – as in real ECU exports)",
+                value="0,2,3,4,5,6,7,8,9,10,12.5,15,17.5,20,22.5,25,30,40,50,60,70,80,90,100",
+            )
+        gen_rpm_default = ",".join(fmt_num(v) for v in engine_df.index)
+        gen_rpm_input = st.text_input(
+            "RPM breakpoints for the generated curve (comma-separated)",
+            value=gen_rpm_default,
+            help="Default = RPM breakpoints of the engine torque table. Max torque at "
+                 "each requested RPM is linearly interpolated from the engine table if "
+                 "it doesn't fall exactly on one of its breakpoints.",
         )
+
+        preview_x = np.linspace(0, 100, 101)
+        preview_y = shape_fn(preview_x / 100.0) * max_fraction
+        preview_df = pd.DataFrame({"pedal": preview_x, "target_pct": preview_y})
+        preview_chart = (
+            alt.Chart(preview_df)
+            .mark_line()
+            .encode(
+                x=alt.X("pedal:Q", title="Pedal [%]", scale=alt.Scale(domain=[0, 100])),
+                y=alt.Y("target_pct:Q", title="Target torque [% of engine max]", scale=alt.Scale(domain=[0, 100])),
+            )
+            .properties(height=200)
+        )
+        st.altair_chart(preview_chart, use_container_width=True)
+
         if st.button("Generate demand curve"):
             try:
                 gas_bp = np.array(sorted(float(x) for x in gas_bp_input.split(",") if x.strip()))
             except ValueError:
                 st.error("Could not parse gas breakpoints as numbers.")
                 st.stop()
-            rpm_bp = engine_df.index.values.astype(float)
-            max_torque = engine_df.max(axis=1).values.astype(float)
-            shape = (gas_bp / 100.0) ** shape_n
+            try:
+                rpm_bp = np.array(sorted(float(x) for x in gen_rpm_input.split(",") if x.strip()))
+            except ValueError:
+                st.error("Could not parse RPM breakpoints as numbers.")
+                st.stop()
+            engine_rpm_for_gen = engine_df.index.values.astype(float)
+            engine_max_torque = engine_df.max(axis=1).values.astype(float)
+            max_torque = np.interp(rpm_bp, engine_rpm_for_gen, engine_max_torque)
+            shape = shape_fn(gas_bp / 100.0)
             generated = np.outer(max_torque * (max_fraction / 100.0), shape)
             generated_df = pd.DataFrame(np.round(generated, 2), index=rpm_bp, columns=gas_bp)
             generated_df.index.name = "RPM\\Pedal[%]"
@@ -272,11 +351,6 @@ st.subheader("3) Calculation Settings (ETV MAP)")
 
 engine_rpm_bp = engine_df.index.values.astype(float)
 engine_throttle_bp = engine_df.columns.values.astype(float)
-
-def fmt_num(v):
-    v = float(v)
-    return str(int(v)) if v == int(v) else str(v)
-
 
 default_rpm = ",".join(fmt_num(v) for v in demand_df.index)
 default_pedal = ",".join(fmt_num(v) for v in demand_df.columns)
