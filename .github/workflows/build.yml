@@ -1,0 +1,46 @@
+name: Build desktop packages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact-name: OpenETV-macOS
+            artifact-path: dist/OpenETV.app
+          - os: windows-latest
+            artifact-name: OpenETV-Windows
+            artifact-path: dist/OpenETV
+          - os: ubuntu-latest
+            artifact-name: OpenETV-Linux
+            artifact-path: dist/OpenETV
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        run: pyinstaller OpenETV.spec --noconfirm
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.artifact-path }}

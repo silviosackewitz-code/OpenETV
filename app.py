@@ -6,8 +6,9 @@ the original "EGEA Bike Torque Tool" (Stephane Egea):
 
   TORQUE DYNO      : Engine torque table   RPM x Throttle[%] -> Torque[Nm]
                       (may include negative drag torque at closed throttle)
-  ETV TARGET       : Rider demand table    RPM x Pedal[%]    -> Target torque[Nm]
+  TORQUE TARGET    : Rider demand table    RPM x Pedal[%]    -> Target torque[Nm]
   ETV MAP (invert) : Output                RPM x Pedal[%]    -> Throttle[%]
+                      (the actual Electronic Throttle Valve target)
 
 Inversion logic per RPM breakpoint (no interpolation across RPM, as in the
 original tool):
@@ -25,6 +26,7 @@ Post-processing (as in the original tool):
     pedal for each RPM row (more pedal must never mean less throttle).
 """
 import io
+import os
 
 import altair as alt
 import numpy as np
@@ -34,6 +36,12 @@ import streamlit as st
 import dss
 
 st.set_page_config(page_title="OpenETV – Throttle Position Map", layout="wide")
+
+# Resolve sample data relative to this file, not the current working
+# directory (which is unpredictable when launched from a packaged app).
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+SAMPLE_ENGINE_PATH = os.path.join(APP_DIR, "sample_data", "engine_torque_map.csv")
+SAMPLE_DEMAND_PATH = os.path.join(APP_DIR, "sample_data", "demand_map.csv")
 
 
 def load_table(uploaded_file, default_path, key_prefix):
@@ -166,7 +174,7 @@ st.title("OpenETV – Throttle Position Map Generator")
 st.caption(
     "Modeled after the ETV Builder workflow of the EGEA Bike Torque Tool: from an "
     "engine torque table (RPM × Throttle, TORQUE DYNO) and a rider demand table "
-    "(RPM × Pedal, ETV TARGET), the throttle position (ETV MAP / TPS Target) is "
+    "(RPM × Pedal, TORQUE TARGET), the throttle position (ETV MAP / TPS Target) is "
     "computed."
 )
 
@@ -180,14 +188,14 @@ with col1:
     engine_upload = st.file_uploader(
         "Load your own table (CSV/Excel/.dss)", type=["csv", "xlsx", "dss"], key="engine_upload"
     )
-    engine_df, engine_meta = load_table(engine_upload, "sample_data/engine_torque_map.csv", "engine")
+    engine_df, engine_meta = load_table(engine_upload, SAMPLE_ENGINE_PATH, "engine")
     engine_df = st.data_editor(engine_df, num_rows="dynamic", key="engine_editor")
     engine_df.index = engine_df.index.astype(float)
     engine_df.columns = engine_df.columns.astype(float)
     engine_df = engine_df.sort_index().sort_index(axis=1)
 
 with col2:
-    st.subheader("2) Demand Table (ETV TARGET)")
+    st.subheader("2) Demand Table (TORQUE TARGET)")
     st.caption("Rows = RPM, columns = Pedal [%], values = Target torque [Nm]")
 
     with st.expander("Generate demand curve (concave 1:1-feel curve)"):
@@ -240,11 +248,11 @@ with col2:
     )
     demand_meta = None
     if demand_upload is not None:
-        demand_df, demand_meta = load_table(demand_upload, "sample_data/demand_map.csv", "demand")
+        demand_df, demand_meta = load_table(demand_upload, SAMPLE_DEMAND_PATH, "demand")
     elif "demand_base_df" in st.session_state:
         demand_df = st.session_state["demand_base_df"]
     else:
-        demand_df, demand_meta = load_table(None, "sample_data/demand_map.csv", "demand")
+        demand_df, demand_meta = load_table(None, SAMPLE_DEMAND_PATH, "demand")
     demand_key = f"demand_editor_{st.session_state.get('demand_version', 0)}"
     demand_df = st.data_editor(demand_df, num_rows="dynamic", key=demand_key)
     demand_df.index = demand_df.index.astype(float)

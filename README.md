@@ -2,7 +2,7 @@
 
 Local Streamlit app that computes the correct throttle position (ETV MAP /
 TPS Target) from an engine torque table (TORQUE DYNO: RPM × Throttle →
-Torque) and a rider demand table (ETV TARGET: RPM × Pedal → Target torque).
+Torque) and a rider demand table (TORQUE TARGET: RPM × Pedal → Target torque).
 
 Modeled after the ETV Builder workflow of the original "EGEA Bike Torque
 Tool", whose manual served as a reference for the complete original feature
@@ -43,7 +43,7 @@ The browser opens automatically at `http://localhost:8501`.
 - Editable, negative values at TPS=0 allowed (drag torque/friction)
 - Import via CSV, Excel, or Mectronik `.dss` export (`dss.py`)
 
-**2) Demand Table (ETV TARGET)**
+**2) Demand Table (TORQUE TARGET)**
 - Editable, RPM × Pedal → Target torque
 - Import via CSV, Excel, or `.dss` (with a selection dropdown if a file
   contains multiple tables, e.g. one per gear)
@@ -77,6 +77,31 @@ The browser opens automatically at `http://localhost:8501`.
 `dss.py` reads and writes the Mectronik "DataSubset" XML format (see the
 comments in the module). Round-tripping (import → export → import) produces
 exactly identical values; tested against real ECU exports.
+
+## Building a standalone desktop app
+
+A PyInstaller spec (`OpenETV.spec`) is included to build a double-clickable
+app that bundles Python and all dependencies — no separate install needed by
+the end user. PyInstaller does not cross-compile: build on the OS you want to
+target.
+
+```bash
+source venv/bin/activate
+pip install pyinstaller
+pyinstaller OpenETV.spec --noconfirm
+```
+
+- **macOS**: produces `dist/OpenETV.app` — double-click to run.
+- **Windows**: produces `dist/OpenETV/OpenETV.exe` (plus its `_internal`
+  folder, which must stay next to it) — double-click `OpenETV.exe` to run.
+- **Linux**: produces `dist/OpenETV/OpenETV` (plus `_internal`) — run
+  `./OpenETV` from a terminal, or mark it executable and launch from a file
+  manager (behavior varies by distro/desktop environment).
+
+A GitHub Actions workflow (`.github/workflows/build.yml`) is included that
+builds all three platforms automatically on real Windows/Linux/macOS
+runners, in case this project is ever pushed to a GitHub repo and automated
+builds become useful — it is not required for local builds.
 
 ## Not included (original tool features not yet reimplemented)
 
