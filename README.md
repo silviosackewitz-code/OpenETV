@@ -1,0 +1,87 @@
+# OpenETV – Throttle Position Map Generator
+
+Local Streamlit app that computes the correct throttle position (ETV MAP /
+TPS Target) from an engine torque table (TORQUE DYNO: RPM × Throttle →
+Torque) and a rider demand table (ETV TARGET: RPM × Pedal → Target torque).
+
+Modeled after the ETV Builder workflow of the original "EGEA Bike Torque
+Tool", whose manual served as a reference for the complete original feature
+set (including engine brake/cylinder cut, which this reimplementation does
+not yet cover) – as well as the principles for torque tables and gas map
+design described in "A Practical Guide to Race Motorbike Electronics"
+(chapters 2–3).
+
+## In memory of Stéphane Egea
+
+The original "EGEA Bike Torque Tool", on which this project is built, was
+developed by Stéphane Egea (EGEA Engineering). He has passed away, and his
+tool has not been maintained since. This reimplementation was built on his
+freely documented approach and is intended as a continuation of his work in
+his spirit – with thanks for the ideas and the care with which he made them
+accessible.
+
+## Setup
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+## Running
+
+```bash
+source venv/bin/activate
+streamlit run app.py
+```
+
+The browser opens automatically at `http://localhost:8501`.
+
+## Features
+
+**1) Engine Torque Table (TORQUE DYNO)**
+- Editable, negative values at TPS=0 allowed (drag torque/friction)
+- Import via CSV, Excel, or Mectronik `.dss` export (`dss.py`)
+
+**2) Demand Table (ETV TARGET)**
+- Editable, RPM × Pedal → Target torque
+- Import via CSV, Excel, or `.dss` (with a selection dropdown if a file
+  contains multiple tables, e.g. one per gear)
+- **Generate demand curve**: automatically creates a concave "1:1-feel" curve
+  (Target torque = Engine max torque(RPM) × target fraction × (Pedal/100)^n,
+  n<1) with fine gas breakpoints near 0% – see chapter 3.1 of the book for
+  the rationale (linear curves feel "soft at the start, harsh at the end")
+
+**3) Calculation (ETV MAP)**
+- Editable RPM and pedal breakpoints for the output table (default: RPM axis
+  of the demand table); the engine map row is internally rounded to the
+  nearest existing RPM breakpoint of the engine table (no RPM interpolation
+  in the engine map, as in the original tool), with a warning when rounding
+  occurs
+- RPM Calc Method (threshold for the saturation case: first vs. last TPS
+  breakpoint that reaches the max torque) and Max Torque Tolerance, matching
+  the original tool
+
+**4–5) Result & Post-processing**
+- Warnings for saturated cells, values below the TPS=0 torque, and
+  non-monotonic engine map rows
+- Zero-gas fix (Pedal=0% → TPS=0%) and flat-spot fix (TPS monotonically
+  non-decreasing over pedal for each RPM row)
+
+**6) Export**
+- CSV, Excel, and Mectronik `.dss` (with editable table/axis paths and units
+  for re-import into the ECU software)
+
+## The .dss file format
+
+`dss.py` reads and writes the Mectronik "DataSubset" XML format (see the
+comments in the module). Round-tripping (import → export → import) produces
+exactly identical values; tested against real ECU exports.
+
+## Not included (original tool features not yet reimplemented)
+
+- Engine brake application (cylinder cut, torque-per-gear calculation,
+  cut-pattern import)
+- ETV Gain / KP (constant power) area for high RPM (chapter 3.2)
+- Gearbox ratio import (Gearbox DataSubset)
+- Licensing

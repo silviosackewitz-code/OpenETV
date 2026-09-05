@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local background material (manual, test exports) - not part of the project
+reference/
+.reference/
+
+# PyInstaller build output (the .spec file itself is kept and versioned)
+build/
+dist/
