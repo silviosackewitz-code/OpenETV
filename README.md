@@ -87,6 +87,8 @@ The browser opens automatically at `http://localhost:8501`.
 - Remove dips: TPS monotonically non-decreasing over pedal for each RPM row
 
 **6) Export**
+- A calculated map is a first attempt: it moves a throttle, so check it on
+  the dyno, pedal position by pedal position, before anyone rides it
 - CSV, Excel, and Mectronik `.dss` (with editable table/axis paths and units
   for re-import into the ECU software)
 

@@ -405,6 +405,11 @@ if "result_df" in st.session_state:
             st.rerun()
 
     st.subheader("6) Export")
+    st.warning(
+        "A calculated map is a first attempt. It moves a throttle: check it on the dyno, "
+        "pedal position by pedal position, before anyone rides it – the engine torque "
+        "table it was calculated from is a measurement with errors of its own."
+    )
     df_to_download_buttons(result_df, "etv_map_throttle", key_prefix="result")
 
     st.markdown("**DSS export (for re-import into the ECU software)**")
