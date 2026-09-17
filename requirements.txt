@@ -1,5 +1,11 @@
-altair==6.2.2
+# Runtime dependencies. Pinned so every machine builds the same app.
+# Developed and tested with Python 3.14.
+#   python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 numpy==2.5.2
+# Excel import and export of tables.
 openpyxl==3.1.5
+# The Streamlit window, until the rebuild replaces it (docs/plan.md, step 6).
+# tools/etvlib needs none of the three.
+altair==6.2.2
 pandas==3.0.5
 streamlit==1.63.0

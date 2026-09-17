@@ -1,0 +1,17 @@
+# Tool settings only — the app is not installed as a package.
+# Lint: .venv/bin/ruff check .
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+extend-exclude = [".claude", "venv", "build", "dist"]
+
+[tool.ruff.lint]
+# pycodestyle errors (with line length), pyflakes, blind except, flake8-bugbear,
+# pyupgrade, isort — the same set as Race Analysis.
+select = ["E4", "E7", "E9", "E501", "F", "BLE", "B", "UP", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# The Streamlit script of the first version, replaced by the rebuild
+# (docs/plan.md, step 6).
+"app.py" = ["E731", "E501"]

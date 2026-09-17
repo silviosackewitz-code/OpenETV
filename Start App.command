@@ -3,5 +3,4 @@
 # is moved or renamed).
 cd "$(dirname "$0")"
 
-source venv/bin/activate
-streamlit run app.py
+.venv/bin/python -m streamlit run app.py

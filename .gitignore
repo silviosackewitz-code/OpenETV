@@ -1,9 +1,18 @@
-venv/
-__pycache__/
-*.pyc
+# macOS
 .DS_Store
 
-# Local background material (manual, test exports) - not part of the project
+# Python
+__pycache__/
+*.py[cod]
+.venv
+# The environment of the first version; `.venv` replaces it.
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Local background material: the manual of the original tool and real ECU
+# exports. Not part of the project and not ours to publish. Tests that need
+# them skip without them.
 reference/
 .reference/
 

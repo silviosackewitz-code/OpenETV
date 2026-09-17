@@ -23,16 +23,20 @@ accessible.
 ## Setup
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 ```
+
+For testing and packaging: `.venv/bin/pip install -r requirements-dev.txt`,
+then `.venv/bin/python -m pytest` and `.venv/bin/ruff check .`. The project is
+being rebuilt on the structure and look of Race Analysis; the plan, and a
+review of the calculation against real ECU data, is in
+[docs/plan.md](docs/plan.md).
 
 ## Running
 
 ```bash
-source venv/bin/activate
-streamlit run app.py
+.venv/bin/python -m streamlit run app.py
 ```
 
 The browser opens automatically at `http://localhost:8501`.
@@ -92,9 +96,8 @@ the end user. PyInstaller does not cross-compile: build on the OS you want to
 target.
 
 ```bash
-source venv/bin/activate
-pip install pyinstaller
-pyinstaller OpenETV.spec --noconfirm
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/python -m PyInstaller OpenETV.spec --noconfirm
 ```
 
 - **macOS**: produces `dist/OpenETV.app` — double-click to run.
