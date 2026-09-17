@@ -188,6 +188,15 @@ with col2:
                 )
             shape_fn = curves.s_curve_shape(center / 100.0, steepness)
 
+        scale = st.radio(
+            "Torque at a held pedal",
+            ["The same at every RPM (absolute torque)", "A share of the engine's maximum at each RPM"],
+            help="Absolute: full pedal asks for the engine's one maximum, the same pedal means "
+                 "the same Nm at every RPM, capped where the engine has less – the rider holds "
+                 "the pedal and the torque stays. Share: every RPM uses the whole pedal travel, "
+                 "and the torque at a held pedal follows the engine's torque curve again while "
+                 "the revs rise, as with a cable.",
+        )
         gc1, gc2 = st.columns(2)
         with gc1:
             max_fraction = st.number_input(
@@ -234,7 +243,8 @@ with col2:
                 st.error("Could not parse RPM breakpoints as numbers.")
                 st.stop()
             generated_df = to_frame(
-                curves.generate_request(to_table(engine_df), rpm_bp, gas_bp, shape_fn, max_fraction),
+                curves.generate_request(to_table(engine_df), rpm_bp, gas_bp, shape_fn, max_fraction,
+                                        per_rpm=scale.startswith("A share")),
                 "RPM\\Pedal[%]",
             )
             st.session_state["demand_base_df"] = generated_df

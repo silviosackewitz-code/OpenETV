@@ -59,8 +59,12 @@ The browser opens automatically at `http://localhost:8501`.
   zone boundary and transition sharpness. A live chart previews the curve
   shape as you move the sliders. Both the gas breakpoints (fine near 0% to
   match real ECU exports) and the RPM breakpoints for the generated table are
-  editable; max torque is linearly interpolated from the engine table for any
-  RPM not falling exactly on one of its breakpoints.
+  editable. By default the request is in absolute torque: full pedal asks for
+  the engine's one maximum, and the same pedal means the same Nm at every RPM,
+  capped where the engine has less — the torque stays where the rider holds
+  the pedal while the revs rise. Scaling to the engine's maximum at each RPM
+  instead is an option; the torque at a held pedal then follows the engine's
+  torque curve again, as with a cable.
 
 **3) Calculation (ETV MAP)**
 - Editable RPM and pedal breakpoints for the output table (default: RPM axis
