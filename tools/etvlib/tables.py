@@ -33,10 +33,6 @@ class Table:
             raise TableError(f"A table of {len(self.rpm)} × {len(self.axis)} breakpoints "
                              f"cannot hold values of shape {self.values.shape}.")
 
-    def row(self, rpm: float) -> np.ndarray:
-        """The values at an RPM breakpoint of the table."""
-        return self.values[int(np.flatnonzero(self.rpm == rpm)[0])]
-
 
 def make_table(rpm, axis, values) -> Table:
     """A table from breakpoints in any order — sorted ascending on both axes."""
@@ -89,7 +85,7 @@ def _from_rows(rows: list[list]) -> Table:
 def read_csv(text: str) -> Table:
     """A table from CSV text. Also reads what a German spreadsheet exports:
     semicolons between cells and a decimal comma."""
-    text = text.lstrip("﻿")
+    text = text.lstrip("\ufeff")
     first = text.split("\n", 1)[0]
     if ";" in first:
         rows = [[c.replace(",", ".") for c in row] for row in csv.reader(io.StringIO(text), delimiter=";")]

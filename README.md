@@ -64,10 +64,10 @@ The browser opens automatically at `http://localhost:8501`.
 
 **3) Calculation (ETV MAP)**
 - Editable RPM and pedal breakpoints for the output table (default: RPM axis
-  of the demand table); the engine map row is internally rounded to the
-  nearest existing RPM breakpoint of the engine table (no RPM interpolation
-  in the engine map, as in the original tool), with a warning when rounding
-  occurs
+  of the demand table); both tables are read at the exact output RPM, the
+  engine torque interpolated linearly between its RPM rows (rows without any
+  torque, like a dummy row at 0 rpm, are left out), with a warning for RPM
+  outside the engine table
 - RPM Calc Method (threshold for the saturation case: first vs. last TPS
   breakpoint that reaches the max torque) and Max Torque Tolerance, matching
   the original tool

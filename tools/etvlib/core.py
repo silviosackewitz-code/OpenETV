@@ -87,15 +87,35 @@ def invert_row(torque: np.ndarray, throttle: np.ndarray, target: float,
     return float(x0 + (target - t0) / (t1 - t0) * (x1 - x0)), status
 
 
+def engine_row(engine: Table, rpm: float) -> tuple[np.ndarray, bool]:
+    """The engine's torque over throttle at any RPM, and whether that RPM lies
+    outside the table.
+
+    Between two rows of the table: a straight line between them, as the ECU
+    reads the table itself. Rows without any torque do not count — a real
+    export carries one at 0 rpm, and it must not pull its neighbours down.
+    Outside the rows that count, the nearest of them is held."""
+    real = np.flatnonzero(engine.values.any(axis=1))
+    if not len(real):
+        return engine.values[0], False
+    rpms = engine.rpm[real]
+    if rpm <= rpms[0] or rpm >= rpms[-1]:
+        edge = real[0] if rpm <= rpms[0] else real[-1]
+        return engine.values[edge], bool(rpm != engine.rpm[edge])
+    hi = int(np.searchsorted(rpms, rpm, side="right"))
+    lo = hi - 1
+    share = (rpm - rpms[lo]) / (rpms[hi] - rpms[lo])
+    return engine.values[real[lo]] * (1 - share) + engine.values[real[hi]] * share, False
+
+
 @dataclass(frozen=True)
 class EtvResult:
     #: Throttle % over RPM × grip %, rounded to 0.1.
     table: Table
     #: Per cell one of `OK`, `SATURATED`, `BELOW_MIN`, `NON_MONOTONIC`.
     status: np.ndarray
-    #: How many output RPM were not breakpoints of the engine table and took
-    #: the nearest engine row instead.
-    snapped: int
+    #: The output RPM outside the engine table, which took its first or last row.
+    outside: tuple[float, ...]
 
     def count(self, status: str) -> int:
         return int((self.status == status).sum())
@@ -105,25 +125,24 @@ def calculate(engine: Table, request: Table, out_rpm: np.ndarray, out_grip: np.n
               rpm_threshold: float, tolerance: float) -> EtvResult:
     """The ETV map at the given breakpoints.
 
-    The request is interpolated at the exact output RPM; the engine row is the
-    one nearest to it. Above `rpm_threshold` a saturated cell takes the last
-    breakpoint that reaches the maximum, up to it the first."""
+    Request and engine are both read at the exact output RPM (`engine_row`).
+    Above `rpm_threshold` a saturated cell takes the last breakpoint that
+    reaches the maximum, up to it the first."""
     result = np.zeros((len(out_rpm), len(out_grip)))
     status = np.empty_like(result, dtype=object)
-    snapped = 0
+    outside = []
 
     for i, rpm in enumerate(out_rpm):
-        engine_rpm = engine.rpm[int(np.argmin(np.abs(engine.rpm - rpm)))]
-        if engine_rpm != rpm:
-            snapped += 1
-        torque = engine.row(engine_rpm)
-        use_last = engine_rpm > rpm_threshold
+        torque, is_outside = engine_row(engine, rpm)
+        if is_outside:
+            outside.append(float(rpm))
+        use_last = rpm > rpm_threshold
         for j, grip in enumerate(out_grip):
             result[i, j], status[i, j] = invert_row(
                 torque, engine.axis, lookup(request, rpm, grip), tolerance, use_last)
 
     table = Table(np.asarray(out_rpm, dtype=float), np.asarray(out_grip, dtype=float), np.round(result, 1))
-    return EtvResult(table, status, snapped)
+    return EtvResult(table, status, tuple(outside))
 
 
 def zero_gas_fix(etv: Table, ramp_to: float = 20.0) -> Table:

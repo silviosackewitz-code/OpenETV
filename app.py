@@ -291,11 +291,10 @@ with rc3:
     tolerance = st.number_input("Max Torque Tolerance [Nm]", min_value=0.0, value=0.3, step=0.1)
 
 st.caption(
-    "Default = RPM breakpoints of the demand table. For the engine map row, each "
-    "output RPM is internally rounded to the nearest existing breakpoint of the "
-    "engine torque table (no RPM interpolation in the engine map, as in the "
-    "original tool) – the demand value itself is bilinearly interpolated at the "
-    "exact RPM."
+    "Default = RPM breakpoints of the demand table. Both tables are read at the exact "
+    "output RPM: between two RPM rows of the engine torque table its torque is "
+    "interpolated linearly, as the ECU does; rows without any torque (a dummy row at "
+    "0 rpm) are left out."
 )
 
 try:
@@ -313,7 +312,7 @@ if st.button("Calculate ETV MAP", type="primary"):
     result = core.calculate(to_table(engine_df), to_table(demand_df), out_rpm, out_pedal, rpm_calc_method, tolerance)
     st.session_state["result_df"] = to_frame(result.table, "RPM\\Pedal[%]")
     st.session_state["status"] = result.status
-    st.session_state["snapped_count"] = result.snapped
+    st.session_state["outside_rpm"] = result.outside
     st.session_state["out_pedal"] = out_pedal
     st.session_state["demand_meta"] = demand_meta
     st.session_state["engine_meta"] = engine_meta
@@ -324,13 +323,12 @@ if "result_df" in st.session_state:
 
     st.subheader("4) Result: ETV MAP (Throttle TPS [%])")
 
-    snapped_count = st.session_state.get("snapped_count", 0)
-    if snapped_count:
-        st.info(
-            f"{snapped_count} RPM breakpoint(s) did not fall exactly on the engine "
-            "torque table's grid and were rounded to the nearest breakpoint for the "
-            "engine map row (the result's row label still shows the originally "
-            "requested RPM)."
+    outside_rpm = st.session_state.get("outside_rpm", ())
+    if outside_rpm:
+        st.warning(
+            f"{', '.join(tables.format_breakpoint(r) for r in outside_rpm)} rpm lie outside the "
+            "engine torque table. Its first or last RPM row was used there – what the engine "
+            "really gives at these RPM is not known."
         )
 
     n_sat = int((status == core.SATURATED).sum())

@@ -24,7 +24,7 @@ def test_the_sample_tables_give_the_known_map(sample_engine, sample_request):
     assert result.table.values[0].tolist() == [4.1, 5.0, 6.7, 9.0, 12.5, 17.0, 22.7, 30.1, 41.2, 58.7, 100.0]
     assert result.table.values[-1].tolist() == [10.2, 11.1, 13.0, 15.6, 18.8, 23.2, 28.7, 36.3, 46.9, 63.5, 100.0]
     assert (result.count(core.OK), result.count(core.SATURATED)) == (70, 7)
-    assert result.snapped == 0
+    assert result.outside == ()
 
 
 ROW = np.array([-5.0, 10.0, 30.0, 50.0, 60.0])
@@ -104,13 +104,30 @@ def test_a_plateau_is_answered_with_its_smallest_throttle():
 
 # --- What the review found (docs/plan.md, "What is wrong or missing") ---------------------------
 
-@known_defect
-def test_review_2_an_rpm_between_two_engine_rows_uses_both():
+def test_an_rpm_between_two_engine_rows_uses_both():
     engine = make_table([4000, 8000], [0, 100], [[0, 40], [0, 80]])
     request = make_table([4000, 8000], [0, 100], [[0, 30], [0, 30]])
     result = core.calculate(engine, request, np.array([6000.0]), np.array([100.0]), 1e9, 0.0)
     # At 6000 rpm the engine gives 60 Nm wide open; 30 Nm is half of that.
     assert result.table.values[0, 0] == pytest.approx(50.0, abs=0.1)
+    assert result.outside == ()
+
+
+def test_a_row_without_torque_does_not_count_and_rpm_outside_the_table_are_named():
+    # As a real export: a dummy row at 0 rpm, the engine itself from 4000.
+    engine = make_table([0, 4000, 8000], [0, 100], [[0, 0], [0, 40], [0, 80]])
+    request = make_table([0, 8000], [0, 100], [[0, 20], [0, 20]])
+    result = core.calculate(engine, request, np.array([2000.0, 4000.0, 9000.0]), np.array([100.0]), 1e9, 0.0)
+    # 2000 rpm once took the dummy row — a whole row of 0 % throttle. It takes the 4000 row now.
+    assert result.table.values.ravel().tolist() == [50.0, 50.0, 25.0]
+    assert result.outside == (2000.0, 9000.0)
+
+
+def test_the_threshold_is_compared_with_the_output_rpm():
+    engine = make_table([4000, 8000], [0, 50, 100], [[0, 50, 50], [0, 50, 50]])
+    request = make_table([4000, 8000], [0, 100], [[0, 80], [0, 80]])
+    result = core.calculate(engine, request, np.array([5000.0, 7000.0]), np.array([100.0]), 6000.0, 0.0)
+    assert result.table.values.ravel().tolist() == [50.0, 100.0]
 
 
 def test_the_zero_gas_fix_ramps_up_to_20_percent_grip():
