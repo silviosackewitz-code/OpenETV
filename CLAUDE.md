@@ -15,6 +15,12 @@ tick a step there when it is done.
 - **Do not push without asking.** `origin` is a public GitHub repository, and
   `.github/workflows/build.yml` builds the app on three systems at every push
   to `main` (until step 7 of the plan changes that to version tags).
+- **Nothing from the maintainer's books goes into the repository** — no text,
+  no paraphrased passages, no example numbers, no figures, not in files and
+  not in commit messages (the repository is public). Notes on them stay in
+  `.reference/`, which git ignores. The freely distributed manual of the
+  original tool may be referred to. Before a push, search what goes up:
+  `git log -p origin/main..HEAD | grep -i book`.
 - A change to what the calculation returns is never mixed with a
   refactoring: the result goes into an ECU that moves a throttle. Such a
   change gets its own commit and its own tests, and the maintainer decides it
