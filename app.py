@@ -356,7 +356,7 @@ if "result_df" in st.session_state:
     heatmap(result_df, "Throttle", color_scheme="turbo")
 
     st.subheader("5) Post-processing")
-    pc1, pc2, pc3 = st.columns(3)
+    pc1, pc2, pc3, pc4 = st.columns(4)
     with pc1:
         ramp_to = st.number_input(
             "Zero-gas ramp up to pedal [%]", min_value=0.0, max_value=50.0, value=20.0, step=2.5,
@@ -370,11 +370,25 @@ if "result_df" in st.session_state:
             st.session_state["result_df"] = to_frame(fixed, "RPM\\Pedal[%]")
             st.rerun()
     with pc2:
-        if st.button("Apply flat-spot fix (monotonic over pedal)"):
-            fixed = core.monotonic_fix(to_table(st.session_state["result_df"]))
+        if st.button(
+            "Fix flat spots (plateau → ramp)",
+            help="Where TPS stands still while the pedal moves, it rises in a straight line "
+                 "instead, up to the last cell of the plateau – typically the saturated cells "
+                 "towards full pedal. Check the result: the cells before the end of a plateau "
+                 "get less TPS than was calculated.",
+        ):
+            fixed = core.flat_spot_fix(to_table(st.session_state["result_df"]))
             st.session_state["result_df"] = to_frame(fixed, "RPM\\Pedal[%]")
             st.rerun()
     with pc3:
+        if st.button(
+            "Remove dips (monotonic over pedal)",
+            help="More pedal never means less TPS: the running maximum along each RPM row.",
+        ):
+            fixed = core.monotonic_fix(to_table(st.session_state["result_df"]))
+            st.session_state["result_df"] = to_frame(fixed, "RPM\\Pedal[%]")
+            st.rerun()
+    with pc4:
         if st.button("Reset (recalculate)"):
             del st.session_state["result_df"]
             st.rerun()

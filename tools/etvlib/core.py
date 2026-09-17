@@ -17,9 +17,8 @@ Bike Torque Tool" (Stéphane Egea):
   around the request — the first two coming from closed throttle, since an
   engine's torque often sags after its peak and is then reached twice.
 
-Known defects of this calculation, with measurements: docs/plan.md, "Review of
-the calculation". They are kept as they were while the code moved here, and
-`tools/tests/test_core.py` holds each as an expected failure.
+What a review against a real ECU found wrong here, with measurements, and how
+it was fixed: docs/plan.md, "Review of the calculation".
 """
 
 from __future__ import annotations
@@ -163,6 +162,30 @@ def zero_gas_fix(etv: Table, ramp_to: float = 20.0) -> Table:
         end = above[int(np.argmin(np.abs(above - ramp_to)))]
         ramp = (etv.axis > 0.0) & (etv.axis < end)
         values[:, ramp] = np.round(np.outer(values[:, etv.axis == end].ravel(), etv.axis[ramp] / end), 1)
+    return Table(etv.rpm, etv.axis, values)
+
+
+def flat_spot_fix(etv: Table) -> Table:
+    """Where the throttle stands still while the grip moves, let it rise.
+
+    On a flat spot the rider turns the grip and nothing happens — closing it,
+    the throttle follows late. Every run of equal cells along an RPM row
+    becomes a straight line (in grip) from the cell before the run to the
+    run's last cell, as in the original tool. That cell keeps its value, so a
+    run that reaches full grip ends where it did; the cells before it give a
+    little less than was calculated. A run at the closed grip has no cell
+    before it and stays — that is the zero-gas fix's part."""
+    values = etv.values.copy()
+    for row in values:
+        end = len(row) - 1
+        while end > 0:
+            start = end
+            while start > 0 and row[start - 1] == row[end]:
+                start -= 1
+            if start < end and start > 0:
+                grips = etv.axis[start - 1:end + 1]
+                row[start:end] = np.round(np.interp(grips[1:-1], grips[[0, -1]], [row[start - 1], row[end]]), 1)
+            end = start - 1
     return Table(etv.rpm, etv.axis, values)
 
 

@@ -78,8 +78,9 @@ The browser opens automatically at `http://localhost:8501`.
 - Zero-gas fix: Pedal=0% → TPS=0%, then a straight ramp up to a chosen pedal
   breakpoint (default 20%, as in the original tool), so that no step is left
   behind the closed grip
-- Flat-spot fix (TPS monotonically
-  non-decreasing over pedal for each RPM row)
+- Flat-spot fix: a plateau, where TPS stands still while the pedal moves,
+  becomes a straight ramp up to its last cell (as in the original tool)
+- Remove dips: TPS monotonically non-decreasing over pedal for each RPM row
 
 **6) Export**
 - CSV, Excel, and Mectronik `.dss` (with editable table/axis paths and units

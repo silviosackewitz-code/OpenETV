@@ -1,15 +1,12 @@
-"""The calculation: fixed values of today's behaviour, the properties it
-must have, and the defects the review found (docs/plan.md) as expected
-failures — each turns into a pass, and then has to lose its mark, when the
-defect is fixed."""
+"""The calculation: fixed values, the properties it must have, and one test
+or more for each defect the review found (docs/plan.md) — they were expected
+failures until the defect was fixed."""
 
 import numpy as np
 import pytest
 
 from etvlib import core
 from etvlib.tables import Table, make_table
-
-known_defect = pytest.mark.xfail(strict=True)
 
 
 def test_lookup_interpolates_between_breakpoints_and_holds_the_edges(sample_request):
@@ -149,13 +146,27 @@ def test_a_map_without_a_closed_grip_breakpoint_still_gets_its_ramp():
     assert core.zero_gas_fix(etv).values.tolist() == [[3.0, 12.0, 30.0]]
 
 
-@known_defect
-def test_review_4_a_flat_spot_becomes_a_ramp():
-    # The original's fix (manual p. 40) turns a plateau into a linear ramp up to the last cell.
+def test_a_flat_spot_becomes_a_ramp():
+    # As the original's fix: a plateau becomes a straight line up to its last cell.
     etv = Table(np.array([4000.0]), np.array([0.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0]),
                 np.array([[0.0, 32.5, 45.0, 45.0, 45.0, 45.0, 45.0]]))
-    assert hasattr(core, "flat_spot_fix")
     assert core.flat_spot_fix(etv).values.tolist() == [[0.0, 32.5, 35.0, 37.5, 40.0, 42.5, 45.0]]
+
+
+def test_the_ramp_over_a_flat_spot_is_straight_in_grip():
+    # Uneven breakpoints: 45 → 50 → 60 … the step in throttle follows the step in grip.
+    etv = Table(np.array([2000.0]), np.array([40.0, 45.0, 50.0, 60.0, 100.0]),
+                np.array([[30.0, 47.0, 50.0, 50.0, 50.0]]))
+    assert core.flat_spot_fix(etv).values.tolist() == [[30.0, 47.0, 47.3, 47.8, 50.0]]
+
+
+def test_flat_spots_in_the_middle_are_ramped_and_the_closed_grip_is_left_alone():
+    etv = Table(np.array([6000.0]), np.array([0.0, 10.0, 20.0, 30.0, 40.0, 50.0]),
+                np.array([[0.0, 0.0, 10.0, 20.0, 20.0, 30.0]]))
+    assert core.flat_spot_fix(etv).values.tolist() == [[0.0, 0.0, 10.0, 15.0, 20.0, 30.0]]
+    # Nothing flat, nothing changed; and what comes out never steps back.
+    rising = Table(etv.rpm, etv.axis, np.array([[0.0, 5.0, 10.0, 20.0, 25.0, 30.0]]))
+    assert core.flat_spot_fix(rising).values.tolist() == rising.values.tolist()
 
 
 # --- Against a real ECU (skipped without .reference/) --------------------------------------------
