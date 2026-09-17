@@ -12,9 +12,9 @@ tick a step there when it is done.
 
 ## Commits
 - One logical change per commit. Every commit must pass the test suite.
-- **Do not push without asking.** `origin` is a public GitHub repository, and
-  `.github/workflows/build.yml` builds the app on three systems at every push
-  to `main` (until step 7 of the plan changes that to version tags).
+- **Do not push without asking.** `origin` is a public GitHub repository. A
+  version tag (`v0.2.0`) starts `.github/workflows/release.yml`, which builds
+  on three systems and drafts a release — never push a tag without asking.
 - **Nothing from the maintainer's books goes into the repository** — no text,
   no paraphrased passages, no example numbers, no figures, not in files and
   not in commit messages (the repository is public). Notes on them stay in
@@ -37,6 +37,12 @@ tick a step there when it is done.
   focus — both were found only by the WebKit click-through with real keys.
 - Lint: `.venv/bin/ruff check .` (also in CI, `tests.yml`).
 - Chained commands that commit after tests: use `set -o pipefail`.
+- Build: `bash packaging/build.sh` (output goes to `../../OpenETV_App`, outside
+  the repo; `OPENETV_APP_DIR` names another place). A finished build proves
+  little: run the built app (`…/OpenETV.app/Contents/MacOS/OpenETV --no-browser
+  --port 8768` with `OPENETV_HOME=<folder>`) and ask it for its pages, a
+  calculation and an Excel export. A new file the server serves has to be in
+  `packaging/openetv.spec` — `test_packaging.py` checks that.
 
 ## Where things are
 - The calculation: `tools/etvlib/` — numpy only, no pandas, no Streamlit, no

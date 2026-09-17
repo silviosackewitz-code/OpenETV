@@ -230,10 +230,26 @@ One commit per step or part of a step; every commit passes the tests.
   Streamlit window beside it (step 6) and the build (step 7).)*
 - [ ] **6. Remove Streamlit** — `app.py`, `run_app.py`, `Start App.command`;
   README rewritten.
-- [ ] **7. Build and install** — `packaging/build.sh` / `build.ps1` to
+- [x] **7. Build and install** — `packaging/build.sh` / `build.ps1` to
   `../../OpenETV_App`, version from `__init__.py`, icon; macOS: `.app` in a
   DMG, Windows: zip, Linux: tar; GitHub builds on a version tag only and
   attaches the files to a release.
+  *(done, before step 6 — the other way round a commit would have had a spec
+  and a workflow pointing at files that are gone. `packaging/`: launcher, spec
+  (version read from `__init__.py`, the pages and the look by pattern), an
+  icon of its own from an SVG (`.icns`, and an `.ico` written by hand, which
+  may hold PNGs as they are), `build.sh` with a DMG, `build.ps1` with a zip.
+  Built on macOS in 21 s: **the app is 35 MB, was 230 MB** with Streamlit, the
+  DMG 17 MB. The built app was run, not only built: every page, font and
+  module served from the bundle, numpy and openpyxl calculate and export
+  frozen, the DMG holds the app and the link to Applications.
+  `test_packaging.py` fails when the server serves a file the spec leaves
+  out; taking a pattern out of the spec showed that it first missed fonts and
+  sample tables, and notices all four kinds now. `release.yml` replaces
+  `build.yml`: on a version tag only, the tag has to name the version, the
+  files go to a draft release. **Not tried:** that workflow, the builds on
+  Windows and Linux, the `.ico` on Windows, the window on screen. Not signed —
+  see the decisions.)*
 - [ ] **8. Manual** — `docs/manual/`, one page per step, shown under Help.
 - [ ] **9. Features from the review** — the way back (point 6), one run over
   all gears (9), the throttle-at-maximum line (1).

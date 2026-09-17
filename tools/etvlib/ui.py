@@ -56,12 +56,17 @@ def show(port: int = 0, force_browser: bool = False) -> None:
             _log.info("pywebview is not installed; opening the browser instead")
 
     if webview is not None:
-        # text_select: a table of numbers is there to be selected and copied.
-        app.window = webview.create_window("OpenETV", url, width=1240, height=820, min_size=(720, 520),
-                                           text_select=True)
-        webview.start()
-        app.window = None
-    else:
+        try:
+            # text_select: a table of numbers is there to be selected and copied.
+            app.window = webview.create_window("OpenETV", url, width=1240, height=820, min_size=(720, 520),
+                                               text_select=True)
+            webview.start()
+        except Exception:                       # noqa: BLE001 — pywebview without a GUI toolkit (Linux)
+            _log.exception("The window could not be opened; opening the browser instead")
+            webview = None
+        finally:
+            app.window = None
+    if webview is None:
         webbrowser.open(url)
         try:
             threading.Event().wait()

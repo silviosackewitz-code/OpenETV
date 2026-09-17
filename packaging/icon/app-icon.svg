@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- OpenETV: the scope, a grid, and the curve from torque to throttle.
+       Content 824 px inside 1024, as in the macOS icon grid. -->
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b212b"/><stop offset="1" stop-color="#0c0f14"/>
+    </linearGradient>
+    <clipPath id="square"><rect x="100" y="100" width="824" height="824" rx="186"/></clipPath>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="186" fill="url(#panel)"/>
+  <g clip-path="url(#square)" fill="none" stroke-linecap="round">
+    <g stroke="#2a3340" stroke-width="6">
+      <path d="M100 306H924M100 512H924M100 718H924M306 100V924M512 100V924M718 100V924"/>
+    </g>
+    <!-- The engine's torque over throttle: steep early, flat late. -->
+    <path d="M220 800C300 520 420 330 800 250" stroke="#5b6b80" stroke-width="22"/>
+    <!-- The map that answers it: fine early, all of it at the end. -->
+    <path d="M220 800C560 760 700 560 800 250" stroke="#ff2a2a" stroke-width="40"/>
+    <circle cx="800" cy="250" r="34" fill="#ff2a2a" stroke="none"/>
+  </g>
+  <rect x="103" y="103" width="818" height="818" rx="183" fill="none" stroke="#3a4656" stroke-width="6"/>
+</svg>

@@ -107,29 +107,42 @@ The browser opens automatically at `http://localhost:8501`.
 comments in the module). Round-tripping (import → export → import) produces
 exactly identical values; tested against real ECU exports.
 
-## Building a standalone desktop app
+## Installing
 
-A PyInstaller spec (`OpenETV.spec`) is included to build a double-clickable
-app that bundles Python and all dependencies — no separate install needed by
-the end user. PyInstaller does not cross-compile: build on the OS you want to
-target.
+Releases carry one file per system; nothing else has to be installed, Python
+included.
+
+- **macOS**: open `OpenETV-<version>-macOS.dmg` and drag OpenETV to
+  Applications. The app is not signed, so macOS refuses the first start with a
+  warning: right-click the app, choose **Open**, and confirm once.
+- **Windows**: unpack `OpenETV-<version>-Windows.zip` anywhere and start
+  `OpenETV\OpenETV.exe`; its `_internal` folder has to stay beside it.
+  SmartScreen may warn about an unknown publisher (**More info → Run anyway**).
+- **Linux**: unpack `OpenETV-<version>-Linux.tar.gz` and start
+  `OpenETV/OpenETV`. Without a GUI toolkit for pywebview the page opens in the
+  browser instead of a window of its own.
+
+Theme and accent are kept in `~/.openetv/prefs.json`; nothing else is written
+outside the files you save.
+
+## Building
 
 ```bash
 .venv/bin/pip install -r requirements-dev.txt
-.venv/bin/python -m PyInstaller OpenETV.spec --noconfirm
+bash packaging/build.sh
 ```
 
-- **macOS**: produces `dist/OpenETV.app` — double-click to run.
-- **Windows**: produces `dist/OpenETV/OpenETV.exe` (plus its `_internal`
-  folder, which must stay next to it) — double-click `OpenETV.exe` to run.
-- **Linux**: produces `dist/OpenETV/OpenETV` (plus `_internal`) — run
-  `./OpenETV` from a terminal, or mark it executable and launch from a file
-  manager (behavior varies by distro/desktop environment).
+On Windows: `powershell -ExecutionPolicy Bypass -File packaging\build.ps1`.
+PyInstaller does not build across systems — build on the one you want to
+target. The result goes **outside the repository**, to `../../OpenETV_App`
+(`OPENETV_APP_DIR` names another place): the app, and the file a release
+carries (`.dmg`, `.zip`, `.tar.gz`). The version is written once, in
+`tools/etvlib/__init__.py`; the icons come from `packaging/icon/app-icon.svg`
+(`packaging/icon/make_icon.py`).
 
-A GitHub Actions workflow (`.github/workflows/build.yml`) is included that
-builds all three platforms automatically on real Windows/Linux/macOS
-runners, in case this project is ever pushed to a GitHub repo and automated
-builds become useful — it is not required for local builds.
+A release is made by pushing a version tag: `.github/workflows/release.yml`
+builds on macOS, Windows and Linux and attaches the three files to a draft
+release. The tag has to name the version (`v0.2.0` for `0.2.0`).
 
 ## Not included (original tool features not yet reimplemented)
 
