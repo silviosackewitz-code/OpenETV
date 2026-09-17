@@ -19,10 +19,22 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from . import api
+from .prefs import read_prefs
+from .theme import page_look
 
 #: The window's page and its modules (one ES module per area).
 ETV_DIR = Path(__file__).with_name("etv")
 PAGE = ETV_DIR / "etv.html"
+
+#: The look and the helpers every page shares — the files of Race Analysis,
+#: unchanged and at the same addresses (`tools/sync_look.py`). Every page links
+#: `/fonts.css`, then `/theme.css`, and has no colour of its own.
+_LIB = Path(__file__).parent
+FONTS_DIR = _LIB / "fonts"
+_CSS, _JS = "text/css; charset=utf-8", "text/javascript; charset=utf-8"
+SHARED = {"/theme.css": (_LIB / "theme.css", _CSS), "/fonts.css": (_LIB / "fonts.css", _CSS),
+          "/common.js": (_LIB / "common.js", _JS), "/icons.js": (_LIB / "icons.js", _JS),
+          "/theme.js": (_LIB / "theme.js", _JS), "/prefs.js": (_LIB / "prefs.js", _JS)}
 
 #: Files that may be served from a folder, by extension.
 ASSET_TYPES = {".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -111,10 +123,16 @@ class _Handler(BaseHTTPRequestHandler):
             return self._answer(route, {k: v[0] for k, v in parse_qs(parts.query).items()}, error_code=400)
         pages = _pages()
         if path in pages:
-            return self._send(_with_token(pages[path].read_text(encoding="utf-8")).encode(),
-                              "text/html; charset=utf-8")
+            # In the look the user chose, so the page never shows another one first.
+            html = page_look(pages[path].read_text(encoding="utf-8"), read_prefs())
+            return self._send(_with_token(html).encode(), "text/html; charset=utf-8")
+        if path in SHARED:
+            file, kind = SHARED[path]
+            return self._send(file.read_bytes(), kind)
         if path.startswith("/etv/"):
             return self._asset(ETV_DIR, path[len("/etv/"):])
+        if path.startswith("/fonts/"):
+            return self._asset(FONTS_DIR, path[len("/fonts/"):])
         self.send_error(404)
 
     def do_POST(self):

@@ -42,6 +42,12 @@ tick a step there when it is done.
   (the routes under `/api/`; the server keeps nothing between requests, the
   page holds the tables). `etvlib/etv/` is the page and its ES modules — a
   placeholder until step 5 of the plan.
+- The look: `theme.css`, `fonts.css`, `fonts/`, `theme.py`, `theme.js`,
+  `prefs.js`, `common.js`, `icons.js` in `tools/etvlib/` are **copies from Race
+  Analysis — never edit them here**; `tools/sync_look.py` fetches them again
+  (rules: `docs/design.md`). Pages name no colour, only roles of the theme.
+  Preferences (theme, accent): `etvlib/prefs.py`, `~/.openetv/prefs.json`;
+  try the app with `OPENETV_HOME=<folder>` so as not to write one's own.
 - The window: still `app.py` (Streamlit), a thin layer over `etvlib`. It is
   replaced in steps 5–6 of the plan.
 - `.reference/` is not in git: the manual of the original tool and two real

@@ -22,7 +22,7 @@ from pathlib import Path
 
 import numpy as np
 
-from . import __version__, core, curves, dss, tables
+from . import __version__, core, curves, dss, prefs, tables
 from .tables import TableError
 
 #: The tables the window starts with. In the built app they lie next to the
@@ -96,7 +96,15 @@ def sample(query: dict) -> dict:
             "request": tables.to_json(read["demand_map"])}
 
 
+def get_prefs(query: dict) -> dict:
+    return prefs.answer(prefs.read_prefs())
+
+
 # ── POST ────────────────────────────────────────────────────
+
+def post_prefs(body: dict) -> dict:
+    return prefs.answer(prefs.set_prefs(body))
+
 
 def parse(body: dict) -> dict:
     """A file the user chose: `{"name": …, "data": base64, "role": "engine" | "request"}`.
@@ -230,6 +238,6 @@ def _file(name: str, mime: str, content: bytes) -> dict:
     return {"ok": True, "name": name, "mime": mime, "data": base64.b64encode(content).decode("ascii")}
 
 
-GET = {"about": about, "sample": sample}
-POST = {"parse": parse, "shape": shape, "generate": generate, "calculate": calculate,
+GET = {"about": about, "sample": sample, "prefs": get_prefs}
+POST = {"prefs": post_prefs, "parse": parse, "shape": shape, "generate": generate, "calculate": calculate,
         "postprocess": postprocess, "export": export}

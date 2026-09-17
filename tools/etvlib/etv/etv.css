@@ -1,0 +1,9 @@
+/* Where things are and how big. What colour something has is decided in
+   /theme.css — a page uses its roles and scales and names no colour itself. */
+
+main{max-width:560px;margin:0 auto;padding:var(--s-5) var(--s-4)}
+h1{margin:0 0 var(--s-4);font-size:var(--fs-5);font-weight:600}
+h2{margin:0 0 var(--s-3);font-size:var(--fs-4);font-weight:600}
+.card{margin-top:var(--s-4);padding:var(--s-4);border:1px solid var(--line);border-radius:var(--r);
+  background:var(--panel)}
+.card .field:last-child{margin-bottom:0}

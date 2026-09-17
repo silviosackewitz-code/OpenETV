@@ -150,7 +150,7 @@ docs/              plan.md, design.md, manual/
 ```
 
 The look is copied from Race Analysis with a note of the commit it came from
-(`tools/sync_look.sh` fetches it again; a test keeps colour values out of the
+(`tools/sync_look.py` fetches it again; a test keeps colour values out of the
 pages). Pages link `/fonts.css` and `/theme.css` exactly as there, so that
 OpenETV could later become a window of Race Analysis: package into that
 repository, one route, one button.
@@ -199,9 +199,16 @@ One commit per step or part of a step; every commit passes the tests.
   what to do instead — openpyxl never could read it. A placeholder page makes
   one round through the API; tried in a real browser. The pywebview window
   comes with the page in step 5.)*
-- [ ] **4. The look** — theme, fonts, icons, `sync_look.sh`, `test_theme.py`;
-  theme and accent as preferences. Best after Race Analysis has pushed its
-  phase 3.
+- [x] **4. The look** — theme, fonts, icons, a sync script, a test that keeps
+  colours out of the pages; theme and accent as preferences.
+  *(done: `tools/sync_look.py` — Python rather than a shell script, so it runs
+  on Windows too — copies 15 files from what is committed in Race Analysis
+  (16522ca, its redesign phases 3 and 4 pushed) and writes `look.json`;
+  `test_look.py` fails on an edited copy, a colour outside the theme, an
+  unknown role or icon. Preferences in `~/.openetv/prefs.json` with the answer
+  shape of Race Analysis, so `theme.js` and `prefs.js` run unchanged. Tried in
+  a real browser: Plex loads from the shipped files, theme and accent change
+  at once, and a reload is served in the chosen look.)*
 - [ ] **5. The window** — page, modules, grid, heatmap, curve preview, export
   through the system's file dialog; JS tests and a WebKit click-through.
 - [ ] **6. Remove Streamlit** — `app.py`, `run_app.py`, `Start App.command`;

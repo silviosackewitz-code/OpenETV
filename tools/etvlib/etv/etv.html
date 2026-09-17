@@ -3,12 +3,21 @@
 <head>
 <meta charset="utf-8">
 <title>OpenETV</title>
+<link rel="stylesheet" href="/fonts.css">
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/etv/etv.css">
 </head>
 <body>
-<!-- A placeholder until the window is built (docs/plan.md, step 5). It only
-     shows that page, key and API work together; it has no look of its own. -->
-<h1>OpenETV</h1>
-<p id="state">Asking the server …</p>
+<!-- A placeholder until the window is built (docs/plan.md, step 5): it shows
+     that page, key, API and look work together. -->
+<main>
+  <h1>OpenETV</h1>
+  <p class="banner"><span class="grow" id="state">Asking the server …</span></p>
+  <section class="card">
+    <h2>Appearance</h2>
+    <div id="appearance"></div>
+  </section>
+</main>
 <script type="module" src="/etv/main.js"></script>
 </body>
 </html>

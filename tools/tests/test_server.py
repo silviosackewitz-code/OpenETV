@@ -46,6 +46,40 @@ def test_the_pages_modules_are_served_and_nothing_else_from_the_disk(running):
         assert ask(running, "GET", path)[0] == 404, path
 
 
+def test_the_page_links_the_look_and_comes_in_the_one_the_user_chose(running):
+    from etvlib import prefs  # noqa: PLC0415
+
+    text = ask(running, "GET", "/", token=False)[2].decode()
+    fonts, look, own = (text.index(f'href="{href}"') for href in ("/fonts.css", "/theme.css", "/etv/etv.css"))
+    assert fonts < look < own                                          # the page's own styles come last
+    assert "dataset.theme" not in text and '<style id="accentRoles"></style>' in text
+
+    prefs.set_prefs({"theme": "dark", "accent": "#0a5fd1"})
+    text = ask(running, "GET", "/", token=False)[2].decode()
+    assert 'document.documentElement.dataset.theme="dark"' in text
+    assert '<style id="accentRoles">:root{--accent:' in text
+
+
+def test_the_look_and_the_shared_scripts_are_served_at_the_addresses_of_race_analysis(running):
+    for path, kind in (("/theme.css", "text/css"), ("/fonts.css", "text/css"), ("/common.js", "text/javascript"),
+                       ("/icons.js", "text/javascript"), ("/theme.js", "text/javascript"),
+                       ("/prefs.js", "text/javascript"), ("/etv/etv.css", "text/css"),
+                       ("/fonts/IBMPlexSans-Regular.woff2", "font/woff2")):
+        status, got, content = ask(running, "GET", path, token=False)
+        assert status == 200 and got.startswith(kind) and content, path
+    for path in ("/fonts/OFL.txt", "/fonts/../theme.py", "/theme.py", "/look.json", "/prefs.py"):
+        assert ask(running, "GET", path)[0] == 404, path
+
+
+def test_the_preferences_over_http(running, own_prefs_file):
+    assert ask(running, "GET", "/api/prefs", token=False)[0] == 403
+    answer = json.loads(ask(running, "POST", "/api/prefs", {"theme": "light"})[2])
+    assert answer["ok"] and answer["theme"] == "light"
+    assert json.loads(ask(running, "GET", "/api/prefs")[2])["theme"] == "light"
+    assert json.loads(ask(running, "POST", "/api/prefs", {"theme": "pink"})[2]) == {
+        "ok": False, "error": "preference 'theme' must be one of auto, light, dark"}
+
+
 def test_data_only_with_the_key(running):
     assert ask(running, "GET", "/api/about", token=False)[0] == 403
     assert ask(running, "POST", "/api/calculate", {}, token=False)[0] == 403

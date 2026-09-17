@@ -38,3 +38,13 @@ def real_maps():
     """The grip-to-throttle maps of the same ECU, one per gear. In %: these
     are ETV maps, not torque requests, whatever the file is called."""
     return _real("torque demand.dss")
+
+
+@pytest.fixture(autouse=True)
+def own_prefs_file(tmp_path, monkeypatch):
+    """No test reads or writes the real `~/.openetv/prefs.json`."""
+    from etvlib import prefs  # noqa: PLC0415 — after the path is set up
+
+    file = tmp_path / "prefs.json"
+    monkeypatch.setattr(prefs, "PREFS_FILE", file)
+    return file

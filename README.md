@@ -131,6 +131,11 @@ builds become useful — it is not required for local builds.
 - The original tool's software activation scheme (email-based `.req`/`.lic`
   file exchange) — this project has no such licensing/activation mechanism
 
+## Third-party notices
+
+The window's typeface (IBM Plex, OFL) and icons (Lucide, ISC) are the work of
+others: see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Contributions and improvements are welcome.
