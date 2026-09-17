@@ -133,3 +133,56 @@ def test_every_export_format_comes_back_as_the_same_table():
     assert tables.to_json(read.table) == etv
     with pytest.raises(ValueError, match="Unknown format 'pdf'"):
         api.export({"table": etv, "format": "pdf"})
+
+
+class _Window:
+    """Stands in for the pywebview window: answers the save dialog."""
+
+    def __init__(self, answer):
+        self.answer, self.asked = answer, None
+
+    def create_file_dialog(self, kind, save_filename="", file_types=()):
+        self.asked = (save_filename, file_types)
+        return self.answer
+
+
+@pytest.fixture
+def window(monkeypatch):
+    from etvlib import ui
+
+    def put(answer):
+        fake = _Window(answer)
+        monkeypatch.setattr(ui.app, "window", fake)
+        return fake
+    return put
+
+
+def test_saving_writes_the_file_where_the_dialog_says(window, tmp_path):
+    fake = window((str(tmp_path / "my map.csv"),))
+    answer = api.save({"table": tables.to_json(REQUEST), "format": "csv"})
+    assert answer == {"ok": True, "path": str(tmp_path / "my map.csv")}
+    assert fake.asked == ("etv_map_throttle.csv", ("CSV (*.csv)",))
+    assert tables.to_json(tables.read_csv((tmp_path / "my map.csv").read_text())) == tables.to_json(REQUEST)
+
+
+def test_a_name_typed_without_its_ending_gets_it(window, tmp_path):
+    window(str(tmp_path / "map"))                                     # some platforms answer a plain string
+    assert api.save({"table": tables.to_json(REQUEST), "format": "dss"})["path"] == str(tmp_path / "map.dss")
+    assert (tmp_path / "map.dss").read_text().startswith("<?xml")
+
+
+def test_a_cancelled_dialog_writes_nothing(window, tmp_path):
+    window(None)
+    assert api.save({"table": tables.to_json(REQUEST), "format": "xlsx"}) == {"ok": True, "cancelled": True}
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_without_a_window_the_page_is_told_to_use_the_browsers_downloads():
+    answer = api.save({"table": tables.to_json(REQUEST), "format": "csv"})
+    assert answer["ok"] is False and answer["code"] == "no_window"
+
+
+def test_a_folder_that_cannot_be_written_to_is_said(window, tmp_path):
+    window(str(tmp_path / "missing" / "map.csv"))
+    with pytest.raises(ValueError, match="map.csv could not be written"):
+        api.save({"table": tables.to_json(REQUEST), "format": "csv"})

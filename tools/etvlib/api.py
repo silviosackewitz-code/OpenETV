@@ -229,6 +229,34 @@ def export(body: dict) -> dict:
     raise ValueError(f"Unknown format {kind!r}.")
 
 
+#: How the save dialog names each format.
+_KINDS = {"csv": "CSV (*.csv)", "xlsx": "Excel (*.xlsx)", "dss": "Mectronik DataSubset (*.dss)"}
+
+
+def save(body: dict) -> dict:
+    """What `export` answers, written where the user says: the window's save
+    dialog. Answers `{"ok": true, "path": …}`, `{"ok": true, "cancelled": true}`
+    — or, in a browser, where there is no window to ask with,
+    `{"ok": false, "code": "no_window"}`: the page then hands the file to the
+    browser's downloads instead."""
+    from .ui import app  # noqa: PLC0415 — the window is not needed for anything else here
+
+    file = export(body)
+    try:
+        path = app.save_dialog(file["name"], _KINDS[body["format"]])
+    except LookupError:
+        return {"ok": False, "code": "no_window", "error": "There is no window to show a save dialog."}
+    if path is None:
+        return {"ok": True, "cancelled": True}
+    if not path.suffix:                         # a name typed without its ending
+        path = path.with_suffix(Path(file["name"]).suffix)
+    try:
+        path.write_bytes(base64.b64decode(file["data"]))
+    except OSError as error:
+        raise ValueError(f"{path.name} could not be written: {error.strerror or error}") from None
+    return {"ok": True, "path": str(path)}
+
+
 def _file_stem(name: str) -> str:
     """A name that is safe as a file name on every system."""
     return re.sub(r"[^\w.\-]+", "_", str(name)).strip("._") or "table"
@@ -240,4 +268,4 @@ def _file(name: str, mime: str, content: bytes) -> dict:
 
 GET = {"about": about, "sample": sample, "prefs": get_prefs}
 POST = {"prefs": post_prefs, "parse": parse, "shape": shape, "generate": generate, "calculate": calculate,
-        "postprocess": postprocess, "export": export}
+        "postprocess": postprocess, "export": export, "save": save}

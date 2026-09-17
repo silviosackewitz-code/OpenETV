@@ -34,7 +34,8 @@ FONTS_DIR = _LIB / "fonts"
 _CSS, _JS = "text/css; charset=utf-8", "text/javascript; charset=utf-8"
 SHARED = {"/theme.css": (_LIB / "theme.css", _CSS), "/fonts.css": (_LIB / "fonts.css", _CSS),
           "/common.js": (_LIB / "common.js", _JS), "/icons.js": (_LIB / "icons.js", _JS),
-          "/theme.js": (_LIB / "theme.js", _JS), "/prefs.js": (_LIB / "prefs.js", _JS)}
+          "/theme.js": (_LIB / "theme.js", _JS), "/prefs.js": (_LIB / "prefs.js", _JS),
+          "/notify.js": (_LIB / "notify.js", _JS)}
 
 #: Files that may be served from a folder, by extension.
 ASSET_TYPES = {".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",

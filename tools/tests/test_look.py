@@ -22,6 +22,12 @@ LIB = Path(server.__file__).parent
 MANIFEST = json.loads((LIB / "look.json").read_text(encoding="utf-8"))
 THEME = LIB / "theme.css"
 
+#: Sources that carry **data** colours, not the look: the value ramp of the
+#: heatmaps encodes a number, as the ramp of the track view does in Race
+#: Analysis. It is drawn on the scope, which is dark in every theme. Add to
+#: this list only for data.
+DATA_COLOURS = {"etv/ramp.js"}
+
 _COLOUR = re.compile(r"#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![\w-])"
                      r"|\b(?:rgba?|hsla?)\(")
 
@@ -42,7 +48,7 @@ def test_every_copied_file_is_as_it_was_fetched():
 def test_no_source_but_the_theme_names_a_colour():
     ids = {i for page in LIB.rglob("*.html") for i in re.findall(r'\bid="([^"]+)"', page.read_text(encoding="utf-8"))}
     found = [f"{src.relative_to(LIB)}:{number}: {match[0]}"
-             for src in _own_sources()
+             for src in _own_sources() if src.relative_to(LIB).as_posix() not in DATA_COLOURS
              for number, line in enumerate(src.read_text(encoding="utf-8").splitlines(), 1)
              for match in _COLOUR.finditer(line)
              if not (match[0].startswith("#") and match[0][1:] in ids)]   # `$("#cAdd")` is an id, not a colour

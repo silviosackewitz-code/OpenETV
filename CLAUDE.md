@@ -28,7 +28,13 @@ tick a step there when it is done.
 
 ## Checks
 - Tests: `.venv/bin/python -m pytest`. Tests against real ECU exports need
-  `.reference/` (local only) and skip without it.
+  `.reference/` (local only) and skip without it. This includes the window's
+  JavaScript (`tools/tests/js/`, needs Node) and a click-through in WebKit
+  (`test_etv_browser.py`, needs `.venv/bin/python -m playwright install webkit`
+  once). UI changes: run the browser tests and extend them.
+- Trying something in a browser by script is not enough for the grid: without
+  system focus no focus events fire, and a click places its caret *after* the
+  focus — both were found only by the WebKit click-through with real keys.
 - Lint: `.venv/bin/ruff check .` (also in CI, `tests.yml`).
 - Chained commands that commit after tests: use `set -o pipefail`.
 
@@ -40,16 +46,27 @@ tick a step there when it is done.
 - The server: `etvlib/server.py` (127.0.0.1 only, host check, a token per
   run embedded in the page — built like `racelib/server.py`) and `etvlib/api.py`
   (the routes under `/api/`; the server keeps nothing between requests, the
-  page holds the tables). `etvlib/etv/` is the page and its ES modules — a
-  placeholder until step 5 of the plan.
+  page holds the tables).
+- The window: `etvlib/etv/` — `etv.html`, `etv.css` and one ES module per
+  area, no build step. The rules are those of the analyzer in Race Analysis:
+  **nothing runs on import** (each module wires itself in `init()`, `main.js`
+  calls them in a fixed order), **shared state only in `state.js`**, and a
+  module **says what changed** (`events.js`: `engine`, `request`, `settings`,
+  `result`, `step`) instead of calling whoever shows it —
+  `test_etv_import_graph.py` fails on an import ring. `tablemath.js` (what an
+  editable table does to its numbers) and `ramp.js` (the heatmaps' value ramp,
+  the one module that may name colours) touch neither page nor server, so Node
+  tests them. `etvlib/ui.py` opens the page in a pywebview window, or in the
+  browser without it; saving goes through the window's save dialog
+  (`/api/save`), in a browser through its downloads.
 - The look: `theme.css`, `fonts.css`, `fonts/`, `theme.py`, `theme.js`,
   `prefs.js`, `common.js`, `icons.js` in `tools/etvlib/` are **copies from Race
   Analysis — never edit them here**; `tools/sync_look.py` fetches them again
   (rules: `docs/design.md`). Pages name no colour, only roles of the theme.
   Preferences (theme, accent): `etvlib/prefs.py`, `~/.openetv/prefs.json`;
   try the app with `OPENETV_HOME=<folder>` so as not to write one's own.
-- The window: still `app.py` (Streamlit), a thin layer over `etvlib`. It is
-  replaced in steps 5–6 of the plan.
+- `app.py` (Streamlit) is the window of the first version, still there beside
+  the new one until step 6 of the plan removes it.
 - `.reference/` is not in git: the manual of the original tool and two real
   ECU exports. `torque demand.dss` there holds **throttle in %**, not torque —
   see the review in `docs/plan.md`.
@@ -57,8 +74,9 @@ tick a step there when it is done.
 ## Trying the app
 - The Streamlit window: `.venv/bin/python -m streamlit run app.py`
   (`openetv-streamlit` in `.claude/launch.json`).
-- The new server: `PYTHONPATH=tools .venv/bin/python -m etvlib` opens the page
-  in the browser; `--port 8766 --no-browser` for a fixed address
+- The new window: `PYTHONPATH=tools .venv/bin/python -m etvlib` (`--browser`
+  opens the page in the browser instead); `--port 8766 --no-browser` starts
+  the server only, at a fixed address
   (`openetv-server` in `.claude/launch.json`). A session started in another
   project does not see this `launch.json` — start the server in the
   background and open its address instead.

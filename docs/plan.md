@@ -209,8 +209,25 @@ One commit per step or part of a step; every commit passes the tests.
   shape of Race Analysis, so `theme.js` and `prefs.js` run unchanged. Tried in
   a real browser: Plex loads from the shipped files, theme and accent change
   at once, and a reload is served in the chosen look.)*
-- [ ] **5. The window** — page, modules, grid, heatmap, curve preview, export
+- [x] **5. The window** — page, modules, grid, heatmap, curve preview, export
   through the system's file dialog; JS tests and a WebKit click-through.
+  *(done: `etvlib/etv/` — a sidebar with the five steps and a line on how each
+  stands, an editable grid that takes a paste from a spreadsheet, heatmaps and
+  the curve preview on the scope, the result's cells marked by a sign (▲ ▽ !),
+  a map older than its inputs dimmed and named as such; `ui.py` opens it in a
+  pywebview window, saving goes through the window's save dialog and in a
+  browser through its downloads. Rules as in the analyzer of Race Analysis:
+  nothing runs on import, state in `state.js`, changes said through
+  `events.js`; `test_etv_import_graph.py` keeps the imports free of rings.
+  Node tests the table logic and the value ramp, WebKit clicks through the
+  window with real keys, a real file chooser and a real download.
+  The click-through found what trying by script could not: a click placed its
+  caret after the grid had selected the number, so "120" typed into 55 became
+  12055; and at 600 px the page was 662 px wide, a bare `1fr` being
+  `minmax(auto,1fr)`. Both fixed. Not verified: that the pywebview window
+  shows on screen — its process comes up without an error and serves the page,
+  but the list of windows could not be read from here. Still open: the
+  Streamlit window beside it (step 6) and the build (step 7).)*
 - [ ] **6. Remove Streamlit** — `app.py`, `run_app.py`, `Start App.command`;
   README rewritten.
 - [ ] **7. Build and install** — `packaging/build.sh` / `build.ps1` to

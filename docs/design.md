@@ -24,7 +24,9 @@ What is particular to OpenETV:
   (`etvlib/prefs.py`; `OPENETV_HOME` names another folder). The server writes
   them into the page it serves (`theme.page_look`), so the window never shows
   another look first.
-- **Colours that are data:** the value ramp of a heatmap encodes a number, as
-  the ramp of the track view does in Race Analysis. When the window gets one
-  (docs/plan.md, step 5), it lives in one module, and `test_look.py` names that
-  module as the exception.
+- **Colours that are data:** the value ramp of the heatmaps encodes a number,
+  as the ramp of the track view does in Race Analysis. It lives in one module,
+  `etv/ramp.js`, runs from dark to light so that it reads without colour too,
+  and `test_look.py` names that module as the one exception (`DATA_COLOURS`).
+  What happened in a cell of the result is told by a sign in the cell (▲ ▽ !),
+  not by its colour alone.

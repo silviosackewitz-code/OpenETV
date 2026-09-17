@@ -3,5 +3,8 @@
 -r requirements.txt
 pytest==9.1.1
 pyinstaller==6.22.3
+# Click-through of the window in WebKit; once after installing:
+#   .venv/bin/python -m playwright install webkit
+playwright==1.63.0
 # Lint, settings in pyproject.toml: .venv/bin/ruff check .
 ruff==0.16.8

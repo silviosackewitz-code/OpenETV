@@ -35,6 +35,15 @@ review of the calculation against real ECU data, is in
 
 ## Running
 
+The new window (being built, see [docs/plan.md](docs/plan.md)):
+
+```bash
+PYTHONPATH=tools .venv/bin/python -m etvlib
+```
+
+It opens in a window of its own (pywebview), or with `--browser` in the
+browser. The Streamlit window of the first version is still there:
+
 ```bash
 .venv/bin/python -m streamlit run app.py
 ```

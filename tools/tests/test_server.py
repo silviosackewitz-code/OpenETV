@@ -63,12 +63,26 @@ def test_the_page_links_the_look_and_comes_in_the_one_the_user_chose(running):
 def test_the_look_and_the_shared_scripts_are_served_at_the_addresses_of_race_analysis(running):
     for path, kind in (("/theme.css", "text/css"), ("/fonts.css", "text/css"), ("/common.js", "text/javascript"),
                        ("/icons.js", "text/javascript"), ("/theme.js", "text/javascript"),
-                       ("/prefs.js", "text/javascript"), ("/etv/etv.css", "text/css"),
+                       ("/prefs.js", "text/javascript"), ("/notify.js", "text/javascript"),
+                       ("/etv/etv.css", "text/css"),
                        ("/fonts/IBMPlexSans-Regular.woff2", "font/woff2")):
         status, got, content = ask(running, "GET", path, token=False)
         assert status == 200 and got.startswith(kind) and content, path
     for path in ("/fonts/OFL.txt", "/fonts/../theme.py", "/theme.py", "/look.json", "/prefs.py"):
         assert ask(running, "GET", path)[0] == 404, path
+
+
+def test_everything_the_page_and_its_modules_ask_for_is_served(running):
+    # A module that is imported but not served is a window that stays empty.
+    page = ask(running, "GET", "/", token=False)[2].decode()
+    wanted = set(re.findall(r'(?:src|href)="(/[^"]+)"', page))
+    for module in server.ETV_DIR.glob("*.js"):
+        text = module.read_text(encoding="utf-8")
+        wanted.update(re.findall(r'from\s+"(/[^"]+)"', text))
+        wanted.update(f"/etv/{name}" for name in re.findall(r'from\s+"\./([^"]+)"', text))
+    assert len(wanted) > 20
+    for path in sorted(wanted):
+        assert ask(running, "GET", path, token=False)[0] == 200, path
 
 
 def test_the_preferences_over_http(running, own_prefs_file):
