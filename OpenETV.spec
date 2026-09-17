@@ -22,7 +22,8 @@ from PyInstaller.utils.hooks import collect_all
 
 datas = [
     ("app.py", "."),
-    ("dss.py", "."),
+    # The calculation; app.py puts tools/ on the path and imports it from there.
+    ("tools/etvlib", "tools/etvlib"),
     ("sample_data", "sample_data"),
 ]
 binaries = []

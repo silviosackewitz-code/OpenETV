@@ -45,7 +45,7 @@ The browser opens automatically at `http://localhost:8501`.
 
 **1) Engine Torque Table (TORQUE DYNO)**
 - Editable, negative values at TPS=0 allowed (drag torque/friction)
-- Import via CSV, Excel, or Mectronik `.dss` export (`dss.py`)
+- Import via CSV, Excel, or Mectronik `.dss` export (`tools/etvlib/dss.py`)
 
 **2) Demand Table (TORQUE TARGET)**
 - Editable, RPM × Pedal → Target torque
@@ -84,7 +84,7 @@ The browser opens automatically at `http://localhost:8501`.
 
 ## The .dss file format
 
-`dss.py` reads and writes the Mectronik "DataSubset" XML format (see the
+`tools/etvlib/dss.py` reads and writes the Mectronik "DataSubset" XML format (see the
 comments in the module). Round-tripping (import → export → import) produces
 exactly identical values; tested against real ECU exports.
 
