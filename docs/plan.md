@@ -191,8 +191,14 @@ One commit per step or part of a step; every commit passes the tests.
   there; 11 — the export says that a calculated map belongs on the dyno
   first)* — review points 1–5, 7, 8 and 11, one commit
   each, after the maintainer's decision.
-- [ ] **3. Server and API** — parse, generate, calculate, post-process,
+- [x] **3. Server and API** — parse, generate, calculate, post-process,
   export; token and host check as in Race Analysis.
+  *(done: `server.py`, `api.py`, `cli.py`; the server keeps no state, the page
+  holds the tables. Every input is checked once, in `tables.from_json`, and
+  answered as a sentence. `.DSS` in capitals is read, `.xls` is refused with
+  what to do instead — openpyxl never could read it. A placeholder page makes
+  one round through the API; tried in a real browser. The pywebview window
+  comes with the page in step 5.)*
 - [ ] **4. The look** — theme, fonts, icons, `sync_look.sh`, `test_theme.py`;
   theme and accent as preferences. Best after Race Analysis has pushed its
   phase 3.

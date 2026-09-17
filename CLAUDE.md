@@ -37,12 +37,22 @@ tick a step there when it is done.
   window. `core.py` (inverting the engine table, post-processing), `curves.py`
   (generating a torque request), `tables.py` (a table, CSV and Excel),
   `dss.py` (Mectronik DataSubset files).
+- The server: `etvlib/server.py` (127.0.0.1 only, host check, a token per
+  run embedded in the page — built like `racelib/server.py`) and `etvlib/api.py`
+  (the routes under `/api/`; the server keeps nothing between requests, the
+  page holds the tables). `etvlib/etv/` is the page and its ES modules — a
+  placeholder until step 5 of the plan.
 - The window: still `app.py` (Streamlit), a thin layer over `etvlib`. It is
-  replaced in steps 3–6 of the plan.
+  replaced in steps 5–6 of the plan.
 - `.reference/` is not in git: the manual of the original tool and two real
   ECU exports. `torque demand.dss` there holds **throttle in %**, not torque —
   see the review in `docs/plan.md`.
 
 ## Trying the app
-`.venv/bin/python -m streamlit run app.py`, or the configuration
-`openetv-streamlit` in `.claude/launch.json`.
+- The Streamlit window: `.venv/bin/python -m streamlit run app.py`
+  (`openetv-streamlit` in `.claude/launch.json`).
+- The new server: `PYTHONPATH=tools .venv/bin/python -m etvlib` opens the page
+  in the browser; `--port 8766 --no-browser` for a fixed address
+  (`openetv-server` in `.claude/launch.json`). A session started in another
+  project does not see this `launch.json` — start the server in the
+  background and open its address instead.

@@ -46,6 +46,35 @@ def make_table(rpm, axis, values) -> Table:
     return Table(rpm[rows], axis[cols], values[np.ix_(rows, cols)])
 
 
+def from_json(obj, what: str) -> Table:
+    """A table as a page sends it: `{"rpm": […], "axis": […], "values": [[…], …]}`.
+
+    `what` names it in the message ("engine torque table"). An editable grid
+    can send anything — an empty cell, a breakpoint typed twice — so
+    everything is checked here, once, for every route."""
+    if not isinstance(obj, dict) or not all(key in obj for key in ("rpm", "axis", "values")):
+        raise TableError(f"The {what} is missing.")
+    try:
+        table = make_table(obj["rpm"], obj["axis"], obj["values"])
+    except (TypeError, ValueError) as error:
+        if isinstance(error, TableError):
+            raise TableError(f"The {what}: {error}") from None
+        raise TableError(f"The {what} has a cell that is not a number.") from None
+    if not len(table.rpm) or not len(table.axis):
+        raise TableError(f"The {what} is empty.")
+    if not (np.isfinite(table.rpm).all() and np.isfinite(table.axis).all() and np.isfinite(table.values).all()):
+        raise TableError(f"The {what} has an empty cell or one that is not a number.")
+    for name, breakpoints in (("RPM", table.rpm), ("column", table.axis)):
+        twice = breakpoints[:-1][np.diff(breakpoints) == 0]
+        if len(twice):
+            raise TableError(f"The {what} has the {name} breakpoint {format_breakpoint(twice[0])} twice.")
+    return table
+
+
+def to_json(table: Table) -> dict:
+    return {"rpm": table.rpm.tolist(), "axis": table.axis.tolist(), "values": table.values.tolist()}
+
+
 def parse_breakpoints(text: str) -> np.ndarray:
     """Breakpoints typed as `0, 2, 3.5, …` — sorted ascending.
 
