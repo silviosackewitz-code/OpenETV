@@ -70,8 +70,10 @@ def test_the_engines_own_torque_gives_throttle_equal_to_grip(sample_engine):
 def test_post_processing(sample_engine, sample_request):
     etv = core.calculate(sample_engine, sample_request, sample_request.rpm, sample_request.axis, 7000.0, 0.3).table
     assert (etv.values[:, 0] > 0).all()                               # 0 Nm is not 0 % throttle …
-    assert (core.zero_gas_fix(etv).values[:, 0] == 0).all()           # … until the fix says so
-    assert (core.zero_gas_fix(etv).values[:, 1:] == etv.values[:, 1:]).all()
+    fixed = core.zero_gas_fix(etv)
+    assert (fixed.values[:, 0] == 0).all()                            # … until the fix says so
+    assert (np.diff(fixed.values, axis=1) >= 0).all()                 # and no step back on the way up
+    assert (fixed.values[:, etv.axis >= 20] == etv.values[:, etv.axis >= 20]).all()
 
     dipped = Table(np.array([5000.0]), np.array([0.0, 50.0, 100.0]), np.array([[10.0, 8.0, 30.0]]))
     assert core.monotonic_fix(dipped).values.tolist() == [[10.0, 10.0, 30.0]]
@@ -111,11 +113,23 @@ def test_review_2_an_rpm_between_two_engine_rows_uses_both():
     assert result.table.values[0, 0] == pytest.approx(50.0, abs=0.1)
 
 
-@known_defect
-def test_review_3_the_zero_gas_fix_ramps_up_to_20_percent_grip():
-    # The original's fix (manual p. 39): 0 at grip 0, linear up to the 20 % breakpoint.
+def test_the_zero_gas_fix_ramps_up_to_20_percent_grip():
+    # As the original's fix: 0 at grip 0, then a straight line up to the 20 % breakpoint.
     etv = Table(np.array([8000.0]), np.array([0.0, 5.0, 10.0, 20.0, 50.0]), np.array([[9.0, 10.0, 11.0, 12.0, 30.0]]))
     assert core.zero_gas_fix(etv).values.tolist() == [[0.0, 3.0, 6.0, 12.0, 30.0]]
+    # How far is the user's choice; the nearest breakpoint is taken.
+    assert core.zero_gas_fix(etv, ramp_to=9.0).values.tolist() == [[0.0, 5.5, 11.0, 12.0, 30.0]]
+    assert core.zero_gas_fix(etv, ramp_to=0.0).values.tolist() == [[0.0, 10.0, 11.0, 12.0, 30.0]]
+
+
+def test_the_ramp_is_a_straight_line_in_grip_not_in_cells():
+    etv = Table(np.array([8000.0]), np.array([0.0, 2.0, 10.0, 20.0]), np.array([[9.0, 9.5, 11.0, 12.0]]))
+    assert core.zero_gas_fix(etv).values.tolist() == [[0.0, 1.2, 6.0, 12.0]]
+
+
+def test_a_map_without_a_closed_grip_breakpoint_still_gets_its_ramp():
+    etv = Table(np.array([8000.0]), np.array([5.0, 20.0, 50.0]), np.array([[10.0, 12.0, 30.0]]))
+    assert core.zero_gas_fix(etv).values.tolist() == [[3.0, 12.0, 30.0]]
 
 
 @known_defect

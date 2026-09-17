@@ -126,10 +126,24 @@ def calculate(engine: Table, request: Table, out_rpm: np.ndarray, out_grip: np.n
     return EtvResult(table, status, snapped)
 
 
-def zero_gas_fix(etv: Table) -> Table:
-    """Throttle 0 % at grip 0 %, where the map has that breakpoint."""
+def zero_gas_fix(etv: Table, ramp_to: float = 20.0) -> Table:
+    """A closed grip closes the throttle, and the throttle rises from there in a
+    straight line up to the grip breakpoint nearest to `ramp_to` %.
+
+    Zero torque is not zero throttle, so the calculated map starts above 0 % —
+    with a closed grip the engine would keep pulling. Setting only grip 0 % to
+    zero leaves a step to the next breakpoint (6–16 % throttle with a real
+    table), hence the ramp, as in the original tool. How far it reaches is a
+    judgement: along the ramp the map no longer follows the torque request, so
+    not further than needed; too short, and the first degrees of grip give a
+    step in torque. `ramp_to=0` sets grip 0 % only."""
     values = etv.values.copy()
     values[:, etv.axis == 0.0] = 0.0
+    above = etv.axis[etv.axis > 0.0]
+    if ramp_to > 0.0 and len(above):
+        end = above[int(np.argmin(np.abs(above - ramp_to)))]
+        ramp = (etv.axis > 0.0) & (etv.axis < end)
+        values[:, ramp] = np.round(np.outer(values[:, etv.axis == end].ravel(), etv.axis[ramp] / end), 1)
     return Table(etv.rpm, etv.axis, values)
 
 

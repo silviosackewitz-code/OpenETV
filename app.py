@@ -345,7 +345,7 @@ if "result_df" in st.session_state:
         st.info(
             f"{n_below} cell(s) are below the torque available at TPS=0% "
             "(e.g. a 0 Nm target with negative drag torque) – TPS was set to 0%; "
-            "'Zero-gas fix' below additionally forces TPS=0% exactly at Pedal=0%."
+            "'Zero-gas fix' below forces TPS=0% at Pedal=0% and ramps up from there."
         )
     if n_nonmono:
         st.warning(
@@ -360,8 +360,15 @@ if "result_df" in st.session_state:
     st.subheader("5) Post-processing")
     pc1, pc2, pc3 = st.columns(3)
     with pc1:
-        if st.button("Apply zero-gas fix (Pedal=0% → TPS=0%)"):
-            fixed = core.zero_gas_fix(to_table(st.session_state["result_df"]))
+        ramp_to = st.number_input(
+            "Zero-gas ramp up to pedal [%]", min_value=0.0, max_value=50.0, value=20.0, step=2.5,
+            help="TPS rises in a straight line from 0% at closed pedal to the calculated value "
+                 "at the pedal breakpoint nearest to this. Along the ramp the map does not "
+                 "follow the torque request, so no further than needed; too short, and the "
+                 "first degrees of pedal give a step in torque. 0 = set Pedal=0% only.",
+        )
+        if st.button("Apply zero-gas fix (Pedal=0% → TPS=0%, then a ramp)"):
+            fixed = core.zero_gas_fix(to_table(st.session_state["result_df"]), ramp_to)
             st.session_state["result_df"] = to_frame(fixed, "RPM\\Pedal[%]")
             st.rerun()
     with pc2:

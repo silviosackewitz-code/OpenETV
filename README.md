@@ -75,7 +75,10 @@ The browser opens automatically at `http://localhost:8501`.
 **4–5) Result & Post-processing**
 - Warnings for saturated cells, values below the TPS=0 torque, and
   non-monotonic engine map rows
-- Zero-gas fix (Pedal=0% → TPS=0%) and flat-spot fix (TPS monotonically
+- Zero-gas fix: Pedal=0% → TPS=0%, then a straight ramp up to a chosen pedal
+  breakpoint (default 20%, as in the original tool), so that no step is left
+  behind the closed grip
+- Flat-spot fix (TPS monotonically
   non-decreasing over pedal for each RPM row)
 
 **6) Export**
