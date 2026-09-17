@@ -45,8 +45,7 @@ tick a step there when it is done.
   `packaging/openetv.spec` — `test_packaging.py` checks that.
 
 ## Where things are
-- The calculation: `tools/etvlib/` — numpy only, no pandas, no Streamlit, no
-  window. `core.py` (inverting the engine table, post-processing), `curves.py`
+- The calculation: `tools/etvlib/` — numpy only, no window. `core.py` (inverting the engine table, post-processing), `curves.py`
   (generating a torque request), `tables.py` (a table, CSV and Excel),
   `dss.py` (Mectronik DataSubset files).
 - The server: `etvlib/server.py` (127.0.0.1 only, host check, a token per
@@ -71,18 +70,14 @@ tick a step there when it is done.
   (rules: `docs/design.md`). Pages name no colour, only roles of the theme.
   Preferences (theme, accent): `etvlib/prefs.py`, `~/.openetv/prefs.json`;
   try the app with `OPENETV_HOME=<folder>` so as not to write one's own.
-- `app.py` (Streamlit) is the window of the first version, still there beside
-  the new one until step 6 of the plan removes it.
 - `.reference/` is not in git: the manual of the original tool and two real
   ECU exports. `torque demand.dss` there holds **throttle in %**, not torque —
   see the review in `docs/plan.md`.
 
 ## Trying the app
-- The Streamlit window: `.venv/bin/python -m streamlit run app.py`
-  (`openetv-streamlit` in `.claude/launch.json`).
-- The new window: `PYTHONPATH=tools .venv/bin/python -m etvlib` (`--browser`
-  opens the page in the browser instead); `--port 8766 --no-browser` starts
-  the server only, at a fixed address
+- `PYTHONPATH=tools .venv/bin/python -m etvlib` (`--browser` opens the page in
+  the browser instead); `--port 8766 --no-browser` starts the server only, at
+  a fixed address
   (`openetv-server` in `.claude/launch.json`). A session started in another
   project does not see this `launch.json` — start the server in the
   background and open its address instead.

@@ -228,8 +228,15 @@ One commit per step or part of a step; every commit passes the tests.
   shows on screen — its process comes up without an error and serves the page,
   but the list of windows could not be read from here. Still open: the
   Streamlit window beside it (step 6) and the build (step 7).)*
-- [ ] **6. Remove Streamlit** — `app.py`, `run_app.py`, `Start App.command`;
+- [x] **6. Remove Streamlit** — `app.py`, `run_app.py`, `Start App.command`;
   README rewritten.
+  *(done after step 7, so that no commit had a spec and a workflow pointing at
+  files that were gone. `OpenETV.spec` went with them; `make_sample_data.py`
+  writes its CSVs with the `csv` module and reproduces both byte for byte.
+  requirements.txt is numpy, openpyxl, pywebview — streamlit, altair and
+  pandas are out. Checked in a **fresh venv** built from requirements-dev.txt,
+  which holds none of the three: 124 tests and Ruff pass there, and the app
+  was built and run from it again.)*
 - [x] **7. Build and install** — `packaging/build.sh` / `build.ps1` to
   `../../OpenETV_App`, version from `__init__.py`, icon; macOS: `.app` in a
   DMG, Windows: zip, Linux: tar; GitHub builds on a version tag only and

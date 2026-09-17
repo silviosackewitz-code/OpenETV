@@ -1,8 +1,9 @@
 # OpenETV – Throttle Position Map Generator
 
-Local Streamlit app that computes the correct throttle position (ETV MAP /
-TPS Target) from an engine torque table (TORQUE DYNO: RPM × Throttle →
-Torque) and a rider demand table (TORQUE TARGET: RPM × Pedal → Target torque).
+A local desktop app that computes the throttle position a ride-by-wire ECU
+drives to (ETV MAP / TPS Target) from an engine torque table (TORQUE DYNO:
+RPM × Throttle → Torque) and a torque request (TORQUE TARGET: RPM × Pedal →
+Target torque). It runs on your own machine and talks to nothing.
 
 Modeled after the ETV Builder workflow of the original "EGEA Bike Torque
 Tool", whose manual served as a reference for the complete original feature
@@ -28,45 +29,48 @@ python3 -m venv .venv
 ```
 
 For testing and packaging: `.venv/bin/pip install -r requirements-dev.txt`,
-then `.venv/bin/python -m pytest` and `.venv/bin/ruff check .`. The project is
-being rebuilt on the structure and look of Race Analysis; the plan, and a
-review of the calculation against real ECU data, is in
+then `.venv/bin/python -m pytest` and `.venv/bin/ruff check .` (the browser
+tests need `.venv/bin/python -m playwright install webkit` once). Most people
+need none of this — take a release instead, see **Installing** below.
+
+The app is built like the sister project Race Analysis, and shares its look;
+the plan, with a review of the calculation against real ECU data, is in
 [docs/plan.md](docs/plan.md).
 
-## Running
-
-The new window (being built, see [docs/plan.md](docs/plan.md)):
+## Running from a checkout
 
 ```bash
 PYTHONPATH=tools .venv/bin/python -m etvlib
 ```
 
-It opens in a window of its own (pywebview), or with `--browser` in the
-browser. The Streamlit window of the first version is still there:
+A window of its own opens; `--browser` opens the page in the browser instead,
+`--port 8766 --no-browser` only starts the local server. Nothing but
+`127.0.0.1` is ever listened on, and every request from the page carries a key
+of that run.
 
-```bash
-.venv/bin/python -m streamlit run app.py
-```
-
-The browser opens automatically at `http://localhost:8501`.
+The window has the five steps in a sidebar: the engine torque table, the
+torque request, the settings of the calculation, the ETV map and the export.
+Tables are edited in place and take a paste from a spreadsheet.
 
 ## Features
 
 **1) Engine Torque Table (TORQUE DYNO)**
-- Editable, negative values at TPS=0 allowed (drag torque/friction)
+- Editable in place, pasteable from a spreadsheet; negative values at TPS=0
+  allowed (drag torque/friction), and a table cut at 0 Nm works as well
 - Import via CSV, Excel, or Mectronik `.dss` export (`tools/etvlib/dss.py`)
 
 **2) Demand Table (TORQUE TARGET)**
-- Editable, RPM × Pedal → Target torque
-- Import via CSV, Excel, or `.dss` (with a selection dropdown if a file
-  contains multiple tables, e.g. one per gear)
+- Editable in place, RPM × Pedal → Target torque
+- Import via CSV, Excel, or `.dss` (which may hold several tables, e.g. one
+  per gear — you pick; a table that is in % rather than Nm is a throttle map,
+  not a request, and says so instead of being calculated with)
 - **Generate demand curve**: pick from example curves — cable-like feel
   (concave, n<1, mimics a 1:1 gas/throttle cable), linear, corner-exit
   precision (convex, n>1, keeps the low-to-mid pedal range fine for
   corner-exit throttle dosing while ramping up quickly once you commit to
   full power), or a fully custom S-curve with an adjustable fine-control
   zone boundary and transition sharpness. A live chart previews the curve
-  shape as you move the sliders. Both the gas breakpoints (fine near 0% to
+  shape as you change them. Both the gas breakpoints (fine near 0% to
   match real ECU exports) and the RPM breakpoints for the generated table are
   editable. By default the request is in absolute torque: full pedal asks for
   the engine's one maximum, and the same pedal means the same Nm at every RPM,

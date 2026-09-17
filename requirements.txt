@@ -6,8 +6,3 @@ numpy==2.5.2
 openpyxl==3.1.5
 # The window (docs/plan.md, step 5); without it the page opens in the browser.
 pywebview==6.2.1
-# The Streamlit window, until the rebuild replaces it (docs/plan.md, step 6).
-# tools/etvlib needs none of the three.
-altair==6.2.2
-pandas==3.0.5
-streamlit==1.63.0
