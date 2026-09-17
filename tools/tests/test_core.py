@@ -77,19 +77,30 @@ def test_post_processing(sample_engine, sample_request):
     assert core.monotonic_fix(dipped).values.tolist() == [[10.0, 10.0, 30.0]]
 
 
-# --- What the review found (docs/plan.md, "What is wrong or missing") ---------------------------
-
 #: Like a real engine at low RPM: the torque peaks early and sags after it.
 SAGGING = make_table([4500], range(0, 100, 10), [[0.0, 50.0, 86.0, 84.0, 83.0, 83.5, 84.0, 84.5, 85.0, 85.5]])
 
 
-@known_defect
-def test_review_1_a_row_that_sags_after_its_peak_is_still_inverted_on_its_rising_part():
-    # 85.2 Nm is first reached between 10 and 20 % throttle. The binary search
-    # assumes a sorted row and answers from the sagging part instead (85 %).
-    tps, _ = core.invert_row(SAGGING.values[0], SAGGING.axis, 85.2, 0.0, False)
-    assert 10.0 < tps < 20.0
+def test_a_row_that_sags_after_its_peak_is_inverted_on_its_rising_part():
+    # 85.2 Nm is reached between 10 and 20 % throttle, and again at 85 %. A
+    # binary search, which this once was, answered 84 %.
+    tps, status = core.invert_row(SAGGING.values[0], SAGGING.axis, 85.2, 0.0, False)
+    assert tps == pytest.approx(10 + 10 * 35.2 / 36)
+    assert status == core.NON_MONOTONIC                               # further open the engine gives less
 
+    # Below the sag nothing is doubtful: every larger throttle gives more than 40 Nm.
+    assert core.invert_row(SAGGING.values[0], SAGGING.axis, 40.0, 0.0, False) == (8.0, core.OK)
+
+
+def test_a_plateau_is_answered_with_its_smallest_throttle():
+    row, throttle = np.array([0.0, 10.0, 10.0, 20.0]), np.array([0.0, 10.0, 20.0, 30.0])
+    assert core.invert_row(row, throttle, 10.0, 0.0, False) == (10.0, core.OK)
+    # A real table is 0 Nm up to some throttle: the first torque starts where the zeros end.
+    row = np.array([0.0, 0.0, 0.0, 9.0])
+    assert core.invert_row(row, throttle, 0.9, 0.0, False) == (21.0, core.OK)
+
+
+# --- What the review found (docs/plan.md, "What is wrong or missing") ---------------------------
 
 @known_defect
 def test_review_2_an_rpm_between_two_engine_rows_uses_both():
@@ -130,16 +141,21 @@ def test_the_real_map_means_one_newton_metre_per_percent_grip(real_engine, real_
 
 def test_the_inversion_rebuilds_the_real_map_in_the_middle_of_the_grip(real_engine, real_maps):
     etv = real_maps["Demand.Dry.Gear456"].table
-    rpm = etv.rpm[(etv.rpm >= 7000) & (etv.rpm <= 11500)]             # rows of the engine that rise all the way
+    rpm = etv.rpm[(etv.rpm >= 4000) & (etv.rpm <= 11500)]             # every RPM both tables have
     grip = etv.axis[(etv.axis >= 20) & (etv.axis <= 80)]
     one_nm_per_percent = Table(etv.rpm, etv.axis, np.tile(etv.axis, (len(etv.rpm), 1)))
     ours = core.calculate(real_engine, one_nm_per_percent, rpm, grip, 8000.0, 0.3).table.values
     theirs = np.array([[core.lookup(etv, r, g) for g in grip] for r in rpm])
-    assert np.abs(ours - theirs).mean() < 2.0                         # measured: 1.5 % throttle
+    assert np.abs(ours - theirs).mean() < 1.5                         # measured: 1.2 % throttle
     assert np.abs(ours - theirs).max() < 6.0                          # measured: 5.3, at 11500 rpm
 
 
-def test_most_real_engine_rows_do_not_rise_all_the_way(real_engine):
-    sagging = [rpm for rpm, row in zip(real_engine.rpm, real_engine.values, strict=True)
-               if row.any() and (np.diff(row) < 0).any()]
-    assert len(sagging) == 8                                          # not an exception: review point 1
+def test_most_real_engine_rows_do_not_rise_all_the_way_and_are_inverted_all_the_same(real_engine):
+    sagging = 0
+    for row in real_engine.values[real_engine.values.any(axis=1)]:
+        sagging += bool((np.diff(row) < 0).any())
+        # The identity on the rising part: every new high is found at its own throttle.
+        for j in range(1, int(np.argmax(row))):
+            if row[j] > row[:j].max():
+                assert core.invert_row(row, real_engine.axis, row[j], 0.0, False)[0] == real_engine.axis[j]
+    assert sagging == 8                                               # not an exception: review point 1

@@ -349,9 +349,9 @@ if "result_df" in st.session_state:
         )
     if n_nonmono:
         st.warning(
-            f"{n_nonmono} cell(s) fall in an engine map row that does not increase "
-            "monotonically over throttle – check the result there with 'Flat-spot fix' "
-            "if needed."
+            f"{n_nonmono} cell(s): the engine's torque sags after its peak here and falls "
+            "below the request again at a larger throttle. The smallest throttle that "
+            "delivers the torque was used – check these cells."
         )
 
     st.dataframe(result_df, use_container_width=True)

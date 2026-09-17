@@ -14,7 +14,8 @@ Bike Torque Tool" (Stéphane Egea):
   first breakpoint that reaches the maximum up to a chosen RPM, the last one
   above it ("RPM Calc Method").
 - In between, linear interpolation between the two throttle breakpoints
-  around the request.
+  around the request — the first two coming from closed throttle, since an
+  engine's torque often sags after its peak and is then reached twice.
 
 Known defects of this calculation, with measurements: docs/plan.md, "Review of
 the calculation". They are kept as they were while the code moved here, and
@@ -74,13 +75,15 @@ def invert_row(torque: np.ndarray, throttle: np.ndarray, target: float,
     if target <= min_t:
         return float(throttle[0]), BELOW_MIN
 
-    j = int(np.searchsorted(torque, target, side="right"))
-    j = min(max(j, 1), len(torque) - 1)
+    # The first crossing coming from closed throttle: the smallest opening that
+    # delivers the torque. Real engine rows sag after their peak, so the same
+    # torque can be found again further up — never search such a row as if it
+    # were sorted. `j >= 1`, because the row starts below the target.
+    j = int(np.argmax(torque >= target))
     t0, t1 = torque[j - 1], torque[j]
     x0, x1 = throttle[j - 1], throttle[j]
-    status = OK if np.all(np.diff(torque) >= -1e-9) else NON_MONOTONIC
-    if t1 == t0:
-        return float(x0), status
+    # Worth a look: further open, this engine gives less than was asked for.
+    status = NON_MONOTONIC if (torque[j:] < target).any() else OK
     return float(x0 + (target - t0) / (t1 - t0) * (x1 - x0)), status
 
 
