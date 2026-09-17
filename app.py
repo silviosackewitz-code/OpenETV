@@ -37,7 +37,7 @@ def to_table(df):
     return tables.make_table(df.index, df.columns, df.values)
 
 
-def load_table(uploaded_file, default_path, key_prefix):
+def load_table(uploaded_file, default_path, key_prefix, role):
     """Loads a RPM x <axis> table from CSV/Excel/.dss upload, or a default CSV.
     Returns (df, meta) where meta is the `dss.DssTable` if loaded from a .dss
     file (for re-use as DSS export defaults), else None.
@@ -59,11 +59,12 @@ def load_table(uploaded_file, default_path, key_prefix):
                 f"Loaded: `{table_path}` [{info.unit}] – RPM axis `{info.rpm_path}` "
                 f"[{info.rpm_unit}], other axis `{info.other_path}` [{info.other_unit}]"
             )
+            dss.require_torque(info, role)
             return to_frame(info.table), info
         if uploaded_file.name.endswith((".xlsx", ".xls")):
             return to_frame(tables.read_xlsx(uploaded_file.getvalue())), None
         return to_frame(tables.read_csv(uploaded_file.getvalue().decode("utf-8"))), None
-    except tables.TableError as error:
+    except (tables.TableError, dss.UnitError) as error:
         st.error(str(error))
         st.stop()
 
@@ -120,7 +121,7 @@ with col1:
     engine_upload = st.file_uploader(
         "Load your own table (CSV/Excel/.dss)", type=["csv", "xlsx", "dss"], key="engine_upload"
     )
-    engine_df, engine_meta = load_table(engine_upload, SAMPLE_ENGINE_PATH, "engine")
+    engine_df, engine_meta = load_table(engine_upload, SAMPLE_ENGINE_PATH, "engine", "engine torque table")
     engine_df = st.data_editor(engine_df, num_rows="dynamic", key="engine_editor")
     engine_df.index = engine_df.index.astype(float)
     engine_df.columns = engine_df.columns.astype(float)
@@ -245,11 +246,11 @@ with col2:
     )
     demand_meta = None
     if demand_upload is not None:
-        demand_df, demand_meta = load_table(demand_upload, SAMPLE_DEMAND_PATH, "demand")
+        demand_df, demand_meta = load_table(demand_upload, SAMPLE_DEMAND_PATH, "demand", "torque request")
     elif "demand_base_df" in st.session_state:
         demand_df = st.session_state["demand_base_df"]
     else:
-        demand_df, demand_meta = load_table(None, SAMPLE_DEMAND_PATH, "demand")
+        demand_df, demand_meta = load_table(None, SAMPLE_DEMAND_PATH, "demand", "torque request")
     demand_key = f"demand_editor_{st.session_state.get('demand_version', 0)}"
     demand_df = st.data_editor(demand_df, num_rows="dynamic", key=demand_key)
     demand_df.index = demand_df.index.astype(float)

@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from etvlib import dss
 from etvlib.tables import make_table
@@ -37,6 +38,21 @@ def test_rpm_becomes_the_rows_whichever_axis_holds_it():
     [read] = dss.parse_dss(xml).values()
     assert (read.rpm_path, read.other_path) == ("BreakPt.RPM", "BreakPt.GAS")
     assert np.array_equal(read.table.rpm, ETV.rpm) and np.array_equal(read.table.values, ETV.values)
+
+
+def test_a_throttle_map_is_refused_where_torque_is_needed():
+    [etv] = dss.parse_dss(_xml()).values()                            # written in %
+    with pytest.raises(dss.UnitError, match=r"`ETV.Target.TPS` cannot be used as torque request.*throttle map"):
+        dss.require_torque(etv, "torque request")
+
+    for unit in ("Nm", " nm ", "", None):                             # torque, or no unit given
+        [table] = dss.parse_dss(_xml().replace("<unit>%</unit>", f"<unit>{unit}</unit>" if unit else "", 1)).values()
+        dss.require_torque(table, "torque request")
+
+
+def test_the_real_demand_tables_are_refused_as_torque(real_maps):
+    with pytest.raises(dss.UnitError, match="throttle map"):
+        dss.require_torque(real_maps["Demand.Dry.Gear456"], "torque request")
 
 
 def test_the_real_files_come_back_the_same(real_engine, real_maps):

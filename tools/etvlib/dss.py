@@ -32,6 +32,25 @@ class DssTable:
     other_unit: str
 
 
+class UnitError(ValueError):
+    """A table in a unit the calculation cannot take. The message is for the user."""
+
+
+def require_torque(found: DssTable, role: str) -> None:
+    """Refuse a table that is not in Nm where torque is needed.
+
+    `role` names what the table was offered as: "engine torque table" or
+    "torque request". An ECU export named "demand" can hold throttle in % — an
+    ETV map, the *result* of this calculation. Read as torque it gives a map
+    that looks plausible and means nothing. A table without a unit passes."""
+    unit = (found.unit or "").strip()
+    if not unit or unit.lower() == "nm":
+        return
+    what = ("It is in % – a throttle map (the result of this calculation), not torque."
+            if unit == "%" else f"It is in {unit}.")
+    raise UnitError(f"`{found.path}` cannot be used as {role}: that has to be in Nm. {what}")
+
+
 def _is_rpm(unit, path) -> bool:
     return (unit or "").strip().lower() == "1/min" or "RPM" in (path or "").upper()
 
