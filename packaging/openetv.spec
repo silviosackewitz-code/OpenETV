@@ -30,6 +30,9 @@ pages += [(str(p), "etvlib/etv") for pattern in ("*.html", "*.css", "*.js") for 
 pages += [(str(p), "etvlib/fonts") for p in (LIB / "fonts").glob("*") if p.is_file()]
 # The tables the window starts with (etvlib/api.py, SAMPLE_DIRS).
 pages += [(str(p), "etvlib/sample_data") for p in (ROOT / "sample_data").glob("*.csv")]
+# The user manual, shown in the window under Manual (etvlib/manual.py).
+pages += [(str(p), str(Path("manual") / p.parent.relative_to(ROOT / "docs" / "manual")))
+          for p in (ROOT / "docs" / "manual").rglob("*") if p.is_file() and p.name != ".DS_Store"]
 # The licences of what ships with the app.
 pages += [(str(ROOT / name), ".") for name in ("LICENSE", "THIRD-PARTY-NOTICES.md")]
 
@@ -38,7 +41,10 @@ a = Analysis(
     pathex=[str(TOOLS)],
     binaries=[],
     datas=pages,
-    hiddenimports=[],
+    # Only what PyInstaller cannot find by following imports: Markdown loads
+    # its extensions by name (etvlib/manual.py, EXTENSIONS).
+    hiddenimports=["markdown.extensions.tables", "markdown.extensions.sane_lists",
+                   "markdown.extensions.toc"],
     hookspath=[],
     runtime_hooks=[],
     # What is not needed stays out: numpy otherwise drags its tests along, and

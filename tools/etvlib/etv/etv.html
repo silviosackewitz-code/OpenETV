@@ -22,14 +22,17 @@
       <button class="ev" role="tab" data-step="export"><b>5 · Export</b><small></small></button>
     </div>
     <div class="side-foot">
+      <button class="btn ghost" id="manualOpen"><i data-icon="manual"></i>Manual</button>
       <button class="btn ghost" id="lookOpen"><i data-icon="appearance"></i>Appearance</button>
+      <label class="switch" title="Show the ? marks that open the manual at a step">
+        <input type="checkbox" id="helpMarks"><span>Help</span></label>
     </div>
   </nav>
 
   <main>
     <section data-step="engine" hidden>
       <div class="head">
-        <div><h1>Engine torque</h1>
+        <div><h1 data-help="engine-torque">Engine torque</h1>
           <p>What the engine delivers: RPM down the side, throttle [%] across, torque [Nm] in the cells.</p></div>
         <div class="acts" data-table-acts></div>
       </div>
@@ -39,12 +42,12 @@
 
     <section data-step="request" hidden>
       <div class="head">
-        <div><h1>Torque request</h1>
+        <div><h1 data-help="torque-request">Torque request</h1>
           <p>What the rider asks for: RPM down the side, pedal [%] across, torque [Nm] in the cells.</p></div>
         <div class="acts" data-table-acts></div>
       </div>
       <details class="card" id="generator">
-        <summary>Generate a request from the engine table</summary>
+        <summary data-help="torque-request#generating-a-request" data-help-label="the generator">Generate a request from the engine table</summary>
         <div class="gen">
           <div class="form">
             <label class="field"><span class="field-name">Shape over the pedal</span>
@@ -80,16 +83,16 @@
     </section>
 
     <section data-step="calculation" hidden>
-      <div class="head"><div><h1>Calculation</h1>
+      <div class="head"><div><h1 data-help="calculation">Calculation</h1>
         <p>Per RPM the engine's torque over throttle is read backwards: which throttle gives the requested torque?</p></div></div>
       <div class="card form">
         <label class="field wide"><span class="field-name">RPM breakpoints of the map — empty: those of the torque request</span>
           <input class="input mono" id="setRpm"></label>
         <label class="field wide"><span class="field-name">Pedal breakpoints of the map [%] — empty: those of the torque request</span>
           <input class="input mono" id="setGrip"></label>
-        <label class="field"><span class="field-name">RPM Calc Method — above this RPM a saturated cell takes the largest throttle that reaches the maximum, up to it the smallest</span>
+        <label class="field"><span class="field-name" data-help="calculation#rpm-calc-method">RPM Calc Method — above this RPM a saturated cell takes the largest throttle that reaches the maximum, up to it the smallest</span>
           <select class="input" id="setThreshold"></select></label>
-        <label class="field"><span class="field-name">Max Torque Tolerance [Nm] — how far below the maximum still counts as the maximum</span>
+        <label class="field"><span class="field-name" data-help="calculation#max-torque-tolerance">Max Torque Tolerance [Nm] — how far below the maximum still counts as the maximum</span>
           <input class="input" id="setTolerance" type="number" min="0" step="0.1" value="0.3"></label>
       </div>
       <div class="row"><button class="btn primary" id="calcGo">Calculate ETV map</button>
@@ -98,12 +101,12 @@
 
     <section data-step="result" hidden>
       <div class="head">
-        <div><h1>ETV map</h1><p>The throttle [%] the ECU drives to: RPM down the side, pedal [%] across.</p></div>
+        <div><h1 data-help="etv-map">ETV map</h1><p>The throttle [%] the ECU drives to: RPM down the side, pedal [%] across.</p></div>
         <div class="acts">
           <label class="field inline"><span class="field-name">Zero-gas ramp up to pedal [%]</span>
             <input class="input" id="fixRamp" type="number" min="0" max="50" step="2.5" value="20"></label>
-          <button class="btn" data-fix="zero_gas" title="Pedal 0 % gives throttle 0 %, and the throttle rises from there in a straight line up to the pedal breakpoint nearest to the value on the left.">Zero-gas fix</button>
-          <button class="btn" data-fix="flat_spots" title="Where the throttle stands still while the pedal moves, it rises in a straight line instead, up to the last cell of the plateau. The cells before it get less throttle than was calculated — check them.">Fix flat spots</button>
+          <button class="btn" data-help="etv-map#zero-gas-fix" data-help-place="corner" data-fix="zero_gas" title="Pedal 0 % gives throttle 0 %, and the throttle rises from there in a straight line up to the pedal breakpoint nearest to the value on the left.">Zero-gas fix</button>
+          <button class="btn" data-help="etv-map#fix-flat-spots" data-help-place="corner" data-fix="flat_spots" title="Where the throttle stands still while the pedal moves, it rises in a straight line instead, up to the last cell of the plateau. The cells before it get less throttle than was calculated — check them.">Fix flat spots</button>
           <button class="btn" data-fix="dips" title="More pedal never means less throttle: the running maximum along each RPM row.">Remove dips</button>
         </div>
       </div>
@@ -115,7 +118,7 @@
     </section>
 
     <section data-step="export" hidden>
-      <div class="head"><div><h1>Export</h1><p>The ETV map as a file.</p></div></div>
+      <div class="head"><div><h1 data-help="export">Export</h1><p>The ETV map as a file.</p></div></div>
       <p class="banner danger"><span class="grow">A calculated map is a first attempt. It moves a throttle: check it on the dyno, pedal position by pedal position, before anyone rides it — the engine torque table it was calculated from is a measurement with errors of its own.</span></p>
       <div class="blank" id="exportBlank"><b>Nothing to export yet</b><p>Step 3 calculates the map.</p></div>
       <div id="exportBody" hidden>
@@ -141,6 +144,8 @@
 <input type="file" id="filePick" accept=".csv,.xlsx,.xlsm,.dss,.DSS,.txt" hidden>
 <dialog class="dialog" id="pick"><header><b></b><button data-close aria-label="Close">×</button></header>
   <div class="body"></div></dialog>
+<dialog class="dialog wide" id="manual"><header><b>Manual</b><button data-close aria-label="Close">×</button></header>
+  <iframe title="Manual" src="about:blank"></iframe></dialog>
 <dialog class="dialog" id="look"><header><b>Appearance</b><button data-close aria-label="Close">×</button></header>
   <div class="body" id="appearance"></div></dialog>
 <script type="module" src="/etv/main.js"></script>

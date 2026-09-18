@@ -257,7 +257,20 @@ One commit per step or part of a step; every commit passes the tests.
   files go to a draft release. **Not tried:** that workflow, the builds on
   Windows and Linux, the `.ico` on Windows, the window on screen. Not signed —
   see the decisions.)*
-- [ ] **8. Manual** — `docs/manual/`, one page per step, shown under Help.
+- [x] **8. Manual** — `docs/manual/`, one page per step, shown under **Manual**.
+  *(done: nine pages — the five steps, getting started, files, appearance and
+  the index — rendered by `etvlib/manual.py` with Python-Markdown and served
+  at `/manual/…` in the app's own look. In the window: a **Manual** button, a
+  **Help** switch, and "?" marks at the steps, the two fixes and the two
+  settings that open the manual at the heading of that function
+  (`data-help`, the shared `help.js` copied from Race Analysis).
+  `tools/screenshots.py` takes all seven pictures the same way — WebKit, light
+  theme, marks off, two device pixels per CSS pixel — so the manual keeps one
+  look; taking them by hand is not done here. `test_manual.py` fails on a page
+  missing from the index, a link or a "?" mark pointing at nothing, an unused
+  picture, and a ``` fence the renderer would swallow. The built app carries
+  the manual: checked out of the bundle, pages, pictures and anchors. The app
+  grew from 35 to 38 MB, the DMG from 17 to 21 MB.)*
 - [ ] **9. Features from the review** — the way back (point 6), one run over
   all gears (9), the throttle-at-maximum line (1).
   What the original tool has beyond that (its manual, read in full): table

@@ -94,6 +94,19 @@ def test_the_preferences_over_http(running, own_prefs_file):
         "ok": False, "error": "preference 'theme' must be one of auto, light, dark"}
 
 
+def test_the_manual_is_served_and_nothing_else_from_the_disk(running):
+    status, kind, index = ask(running, "GET", "/manual", token=False)
+    assert status == 200 and kind.startswith("text/html")
+    assert b'href="/manual/etv-map"' in index                          # links as the app serves them
+    page = ask(running, "GET", "/manual/etv-map", token=False)[2]
+    assert b'<h2 id="zero-gas-fix">' in page and b'href="/theme.css"' in page
+    status, kind, picture = ask(running, "GET", "/manual/images/etv-map-result.png", token=False)
+    assert status == 200 and kind == "image/png" and picture[:4] == b"\x89PNG"
+    for path in ("/manual/nothing", "/manual/images/nothing.png", "/manual/../etvlib/server",
+                 "/manual/images/../../LICENSE", "/manualX"):
+        assert ask(running, "GET", path)[0] == 404, path
+
+
 def test_data_only_with_the_key(running):
     assert ask(running, "GET", "/api/about", token=False)[0] == 403
     assert ask(running, "POST", "/api/calculate", {}, token=False)[0] == 403

@@ -1,8 +1,8 @@
 {
   "source": "Race Analysis, tools/racelib",
-  "commit": "9515f446736d8082403020653428cf96b744d843",
+  "commit": "e34f82d4a9ee24afacc4c04e3655d4e37a06ed54",
   "files": {
-    "theme.css": "1d555b45f84ee3d3dd7bd4da26ba7fcb7ee58123770fc9410d7fec65b3baafed",
+    "theme.css": "037cdc40ac3b1e9826a10ee5bdf9032e544abfeb75d2c32d9ecae6e8244f7e4d",
     "fonts.css": "1468019cb4cea6905086dd0fe12cd05273d7234fd65d22564bea94cc252b4934",
     "theme.py": "ecddc572b510f8bcbfd46cff3ace52b94fa5f5e3f79feeba23e4cc466f284373",
     "theme.js": "a8808569418b8702d83219137559a6c5cb5b2360ba4e0a33641608998c16100e",
@@ -10,6 +10,7 @@
     "common.js": "d61dc1ab27e92189e617fd76813c2b5ce8b3774f46e1c38427900d63c1bf9fbd",
     "icons.js": "2fd44271e94aa3ceb213bb0d48d775056e7e0b2247390a70e522901ded80d85e",
     "notify.js": "3e5ee5b34e151f55a15eda172ccb6c8793e130429d8a3cba97c18795678dc2c4",
+    "help.js": "779e3a89bbee701db24e93e94c41c005490cf41f4294bc4cd672ed0828db8b4f",
     "fonts/IBMPlexMono-Medium.woff2": "01d285447409c8a588692162439a038b8cbd7871309ee20267b0d2d91c6e8e22",
     "fonts/IBMPlexMono-Regular.woff2": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7",
     "fonts/IBMPlexMono-SemiBold.woff2": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83",

@@ -28,6 +28,9 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
+The app carries its own manual: **Manual** at the bottom left of the window,
+or read it here — [docs/manual](docs/manual/README.md).
+
 For testing and packaging: `.venv/bin/pip install -r requirements-dev.txt`,
 then `.venv/bin/python -m pytest` and `.venv/bin/ruff check .` (the browser
 tests need `.venv/bin/python -m playwright install webkit` once). Most people

@@ -6,3 +6,5 @@ numpy==2.5.2
 openpyxl==3.1.5
 # The window (docs/plan.md, step 5); without it the page opens in the browser.
 pywebview==6.2.1
+# Renders the user manual (docs/manual) inside the app.
+markdown==3.10.3

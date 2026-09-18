@@ -155,7 +155,7 @@ def test_rows_and_columns_are_added_and_removed(page):
 
 def test_the_zero_gas_fix_is_applied_and_says_how_much_it_changed(page):
     calculate(page)
-    page.get_by_role("button", name="Zero-gas fix").click()
+    page.get_by_role("button", name="Zero-gas fix", exact=True).click()   # not its "?" mark
     expect(page.locator(".notice")).to_contain_text("cell(s) changed")
     for cell in page.locator('#resultGrid td[data-c="1"]').all():
         expect(cell).to_have_text("0")
@@ -208,6 +208,43 @@ def test_the_look_is_chosen_in_the_window_and_kept(page, own_prefs_file):
     assert json.loads(own_prefs_file.read_text()) == {"theme": "dark", "accent": "#0a5fd1"}
     page.locator("#look").get_by_role("button", name="Close").click()
     expect(page.locator("#look")).to_be_hidden()
+
+
+def test_the_manual_opens_in_the_window(page, own_prefs_file):
+    page.get_by_role("button", name="Manual").click()
+    dialog = page.locator("#manual")
+    expect(dialog).to_be_visible()
+    frame = page.frame_locator("#manual iframe")
+    expect(frame.locator("h1")).to_have_text("OpenETV — manual")
+    # A page of the index opens inside the dialog, and leads back.
+    frame.get_by_role("link", name="4 · ETV map").click()
+    expect(frame.locator("h1")).to_have_text("4 · ETV map")
+    frame.get_by_role("link", name="← Manual").click()
+    expect(frame.locator("h1")).to_have_text("OpenETV — manual")
+    dialog.get_by_role("button", name="Close").click()
+    expect(dialog).to_be_hidden()
+
+
+def test_a_help_mark_opens_the_manual_at_its_step(page, own_prefs_file):
+    # A mark of the step that is shown — a mark in another step is hidden with it.
+    section = step(page, "result")
+    mark = section.locator("button.helpmark").first
+    expect(mark).to_be_visible()                                      # shown until they are switched off
+    expect(page.locator("#helpMarks")).to_be_checked()
+
+    page.get_by_role("button", name="Help on Zero-gas fix").click()
+    frame = page.frame_locator("#manual iframe")
+    expect(frame.locator("h1")).to_have_text("4 · ETV map")
+    # At the heading of that fix, not at the top of the page.
+    expect(frame.locator("#zero-gas-fix")).to_be_in_viewport()
+    page.locator("#manual").get_by_role("button", name="Close").click()
+
+    page.locator("#helpMarks").uncheck()
+    expect(mark).to_be_hidden()
+    assert json.loads(own_prefs_file.read_text())["help_marks"] is False
+    page.locator("#helpMarks").check()
+    expect(mark).to_be_visible()                                      # and back again
+    assert json.loads(own_prefs_file.read_text())["help_marks"] is True
 
 
 def test_narrow_the_steps_lie_above_the_step_and_nothing_sticks_out(page):

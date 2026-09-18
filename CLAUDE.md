@@ -64,6 +64,15 @@ tick a step there when it is done.
   tests them. `etvlib/ui.py` opens the page in a pywebview window, or in the
   browser without it; saving goes through the window's save dialog
   (`/api/save`), in a browser through its downloads.
+- The user manual: `docs/manual/`, one Markdown page per step, shown in the
+  window under **Manual** (`etvlib/manual.py`); headings get ids for the "?"
+  marks (`data-help="etv-map#zero-gas-fix"`, the shared `help.js`). Writing
+  guide in `docs/manual/README.md` (no ``` fences — the renderer ignores
+  them). Screenshots only with `.venv/bin/python tools/screenshots.py`, never
+  by hand.
+- **Every change to the app: check the manual page of that function and update
+  it** — text, screenshots, the index in `docs/manual/README.md`, `data-help`
+  anchors. A change is not done while its manual page describes the old state.
 - The look: `theme.css`, `fonts.css`, `fonts/`, `theme.py`, `theme.js`,
   `prefs.js`, `common.js`, `icons.js` in `tools/etvlib/` are **copies from Race
   Analysis — never edit them here**; `tools/sync_look.py` fetches them again

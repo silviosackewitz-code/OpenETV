@@ -13,6 +13,7 @@ import { followLook, mountAppearance } from "/theme.js";
 import { init as initCalc } from "./calc.js";
 import { init as initEngine, showEngine } from "./engine.js";
 import { init as initExporter, showDefaults } from "./exporter.js";
+import { init as initHelp } from "./help.js";
 import { init as initRequest, showRequest } from "./request.js";
 import { init as initResult } from "./result.js";
 import { state } from "./state.js";
@@ -34,6 +35,7 @@ async function start(){
   initCalc();
   initResult();
   initExporter();
+  initHelp();
   initLook();
 
   const [about, sample] = await Promise.all([getJson("/api/about"), getJson("/api/sample")]);

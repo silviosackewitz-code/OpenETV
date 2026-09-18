@@ -21,8 +21,9 @@ from .theme import DEFAULT_ACCENT, DEFAULT_THEME, PRESETS, THEMES, accent_css, p
 #: file here.
 PREFS_FILE = Path(os.environ.get("OPENETV_HOME") or Path.home() / ".openetv") / "prefs.json"
 
-#: Every preference with its default.
-PREFS = {"theme": DEFAULT_THEME, "accent": DEFAULT_ACCENT}
+#: Every preference with its default. `help_marks`: the "?" marks at the
+#: steps that open the manual there are shown (the **Help** switch).
+PREFS = {"theme": DEFAULT_THEME, "accent": DEFAULT_ACCENT, "help_marks": True}
 
 
 def _checked(key: str, value: object) -> object:
@@ -31,7 +32,11 @@ def _checked(key: str, value: object) -> object:
         if value not in THEMES:
             raise ValueError(f"preference 'theme' must be one of {', '.join(THEMES)}")
         return value
-    return parse_accent(value)
+    if key == "accent":
+        return parse_accent(value)
+    if not isinstance(value, bool):
+        raise ValueError(f"preference {key!r} must be true or false")
+    return value
 
 
 def _stored() -> dict:

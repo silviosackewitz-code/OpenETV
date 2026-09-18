@@ -19,6 +19,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from . import api
+from .manual import ManualError, image, render_page
 from .prefs import read_prefs
 from .theme import page_look
 
@@ -35,7 +36,7 @@ _CSS, _JS = "text/css; charset=utf-8", "text/javascript; charset=utf-8"
 SHARED = {"/theme.css": (_LIB / "theme.css", _CSS), "/fonts.css": (_LIB / "fonts.css", _CSS),
           "/common.js": (_LIB / "common.js", _JS), "/icons.js": (_LIB / "icons.js", _JS),
           "/theme.js": (_LIB / "theme.js", _JS), "/prefs.js": (_LIB / "prefs.js", _JS),
-          "/notify.js": (_LIB / "notify.js", _JS)}
+          "/notify.js": (_LIB / "notify.js", _JS), "/help.js": (_LIB / "help.js", _JS)}
 
 #: Files that may be served from a folder, by extension.
 ASSET_TYPES = {".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -134,7 +135,21 @@ class _Handler(BaseHTTPRequestHandler):
             return self._asset(ETV_DIR, path[len("/etv/"):])
         if path.startswith("/fonts/"):
             return self._asset(FONTS_DIR, path[len("/fonts/"):])
+        if path == "/manual" or path.startswith("/manual/"):
+            return self._manual(path)
         self.send_error(404)
+
+    def _manual(self, path: str):
+        """The user manual: /manual/, /manual/<page>, /manual/images/<file>."""
+        rest = path[len("/manual"):].lstrip("/")
+        try:
+            if rest.startswith("images/"):
+                data, kind = image(rest[len("images/"):])
+                return self._send(data, kind)
+            # In the look the user chose, as every page of the app.
+            return self._send(page_look(render_page(rest), read_prefs()).encode(), "text/html; charset=utf-8")
+        except ManualError:
+            return self.send_error(404)
 
     def do_POST(self):
         if not self._host_ok():

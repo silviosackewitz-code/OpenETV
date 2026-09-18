@@ -43,6 +43,8 @@
   --scope:#0b0e13; --scope-grid:#1e2530; --scope-line:#2a3341;
   --scope-ink:#e6eaf1; --scope-ink-2:#8d9aad; --scope-ink-3:#717d8f;
   --scope-veil:rgba(0,0,0,.55); --scope-veil-strong:rgba(0,0,0,.72);
+  /* The line where one lap ends and the next begins. */
+  --scope-boundary:#f5f0e1;
   /* The cursor, a dragged range, corner numbers; corner and straight labels. */
   --scope-mark:#7dd3fc; --scope-mark-soft:rgba(125,211,252,.16);
   --scope-corner:#e879f9; --scope-straight:#4ade80;

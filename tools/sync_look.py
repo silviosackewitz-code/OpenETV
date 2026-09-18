@@ -30,7 +30,7 @@ MANIFEST = TARGET / "look.json"
 SOURCE_DIR = "tools/racelib"
 
 #: What is copied, as it is named in `tools/racelib/` — and here.
-FILES = ("theme.css", "fonts.css", "theme.py", "theme.js", "prefs.js", "common.js", "icons.js", "notify.js",
+FILES = ("theme.css", "fonts.css", "theme.py", "theme.js", "prefs.js", "common.js", "icons.js", "notify.js", "help.js",
          "fonts/IBMPlexMono-Medium.woff2", "fonts/IBMPlexMono-Regular.woff2",
          "fonts/IBMPlexMono-SemiBold.woff2", "fonts/IBMPlexSans-Bold.woff2",
          "fonts/IBMPlexSans-Medium.woff2", "fonts/IBMPlexSans-Regular.woff2",

@@ -23,8 +23,17 @@ body{overflow:hidden}
 /* Chosen: neutral, not the accent — the accent is for action. */
 .ev[aria-selected="true"]{background:var(--bg);border-color:var(--line)}
 .ev[aria-selected="true"] b{font-weight:600}
-.side-foot{border-top:1px solid var(--line);padding:var(--s-2);display:flex}
-.side-foot .btn{flex:1;justify-content:flex-start}
+.side-foot{border-top:1px solid var(--line);padding:var(--s-2);display:flex;flex-wrap:wrap;gap:2px 0}
+.side-foot .btn{flex:0 0 50%;justify-content:flex-start;padding-left:var(--s-2);padding-right:var(--s-1)}
+.side-foot .switch{padding:6px var(--s-2)}
+
+/* The "?" marks (help.js): shown while Help is ticked. */
+.helpmark{margin-left:5px;width:16px;height:16px;flex:none;border-radius:50%;border:1px solid var(--line);
+  background:var(--panel);font-size:var(--fs-1);font-weight:600;color:var(--ink-3);line-height:1;padding:0;
+  letter-spacing:0;text-transform:none;vertical-align:middle;text-align:center}
+.helpmark:hover{border-color:var(--accent);color:var(--accent)}
+.helpmark.corner{position:relative;z-index:1;align-self:flex-start;margin:-6px -4px 0 -10px}
+html:not([data-help-marks="on"]) .helpmark{display:none!important}
 
 /* ── A step ── */
 main{min-width:0;min-height:0;overflow:auto;padding:var(--s-4) var(--s-5)}
@@ -54,7 +63,10 @@ main > section{display:flex;flex-direction:column;gap:var(--s-3);min-height:100%
 section.drop{outline:2px dashed var(--accent);outline-offset:6px;border-radius:var(--r)}
 
 /* ── The table ── */
-.gridwrap{flex:none;max-height:56vh;overflow:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+/* As wide as the table, not wider: a frame ending in empty space looks like a
+   table that failed to fill it. */
+.gridwrap{flex:none;width:max-content;max-width:100%;max-height:56vh;overflow:auto;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
 .gridwrap:empty{display:none}
 .grid{border-collapse:separate;border-spacing:0;font-family:var(--mono);font-size:var(--fs-2);font-variant-numeric:tabular-nums}
 .grid th,.grid td{min-width:54px;padding:4px var(--s-2);text-align:right;white-space:nowrap;
@@ -81,6 +93,8 @@ canvas.curve{height:220px}
 canvas.map{flex:none;height:240px}
 
 dialog.dialog{width:min(560px,92vw)}
+dialog.dialog.wide{width:min(940px,94vw);height:min(86vh,900px)}
+dialog.dialog.wide iframe{flex:1;width:100%;border:0;background:var(--bg)}
 .dialog .refused{color:var(--ink-3)}
 .dialog .body p{display:flex;gap:var(--s-2);align-items:center;flex-wrap:wrap}
 

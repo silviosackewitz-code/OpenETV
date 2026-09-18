@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 import etvlib
-from etvlib import server
+from etvlib import manual, server
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = (ROOT / "packaging" / "openetv.spec").read_text(encoding="utf-8")
@@ -47,6 +47,20 @@ def test_everything_the_server_serves_is_packed():
     wanted |= {"sample_data/engine_torque_map.csv", "sample_data/demand_map.csv"}
     assert len(wanted) > 30
     assert not wanted - packed, f"served, but not in packaging/openetv.spec: {sorted(wanted - packed)}"
+
+
+def test_the_manual_is_packed_with_its_pictures():
+    folder = manual.manual_dir()
+    listed = re.search(r'\(ROOT / "docs" / "manual"\)\.rglob\("([^"]+)"\)', SPEC)
+    assert listed and listed[1] == "*", "packaging/openetv.spec no longer takes the whole manual"
+    assert len(list(folder.glob("*.md"))) >= 8 and any((folder / "images").glob("*.png"))
+
+
+def test_markdown_finds_its_extensions_in_the_built_app():
+    # Markdown loads them by name, so PyInstaller cannot see them.
+    hidden = re.search(r"hiddenimports=\[(.*?)\]", SPEC, re.S)[1]
+    for extension in manual.EXTENSIONS:
+        assert f'"markdown.extensions.{extension}"' in hidden, extension
 
 
 def test_the_icons_and_the_licences_are_there():
