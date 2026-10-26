@@ -454,11 +454,12 @@ pub fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), String> {
 pub fn paste_block(table: &Table, row: usize, col: usize, text: &str) -> Result<Table, String> {
     table.validate()?;
     let mut result = table.clone();
+    let separator = if text.contains('\t') { '\t' } else { ';' };
     let lines: Vec<_> = text.trim_end_matches(['\n', '\r']).split('\n').collect();
     if lines.is_empty() || text.trim().is_empty() {
         return Err("The clipboard is empty.".into());
     }
-    let width = lines[0].trim_end_matches('\r').split('\t').count();
+    let width = lines[0].trim_end_matches('\r').split(separator).count();
     if row
         .checked_add(lines.len())
         .filter(|n| *n <= table.rpm.len() + 1)
@@ -471,7 +472,7 @@ pub fn paste_block(table: &Table, row: usize, col: usize, text: &str) -> Result<
         return Err("The pasted block exceeds the table bounds.".into());
     }
     for (i, line) in lines.iter().enumerate() {
-        let cells: Vec<_> = line.trim_end_matches('\r').split('\t').collect();
+        let cells: Vec<_> = line.trim_end_matches('\r').split(separator).collect();
         if cells.len() != width {
             return Err("The pasted block is not rectangular.".into());
         }

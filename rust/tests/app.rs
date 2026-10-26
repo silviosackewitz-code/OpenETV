@@ -21,7 +21,7 @@ fn project_roundtrip_validation_and_staleness() {
         loaded.result.as_ref().unwrap().table,
         s.result.as_ref().unwrap().table
     );
-    assert!(!loaded.fresh());
+    assert!(loaded.fresh());
     loaded.calculate().unwrap();
     assert!(loaded.fresh());
     loaded.request.values[0][0] += 1.;
@@ -103,4 +103,26 @@ fn saves_refuse_an_external_change() {
     std::fs::write(&p, b"changed elsewhere").unwrap();
     assert!(s.save_checked(&p, &expected).is_err());
     assert_eq!(std::fs::read(&p).unwrap(), b"changed elsewhere");
+}
+
+#[test]
+fn verified_projects_keep_corrections_but_mismatched_baselines_stay_stale() {
+    let mut s = Session::sample();
+    s.calculate().unwrap();
+    let raw = s.raw.clone().unwrap();
+    s.result.as_mut().unwrap().table = model::zero_gas_fix(&raw, 20.).unwrap();
+    let d = tempfile::tempdir().unwrap();
+    let p = d.path().join("p.openetv");
+    s.save(&p).unwrap();
+    let restored = Session::load(&p).unwrap();
+    assert!(restored.fresh());
+    assert_eq!(
+        restored.result.unwrap().table,
+        s.result.as_ref().unwrap().table
+    );
+    s.raw.as_mut().unwrap().values[0][0] += 1.;
+    s.save(&p).unwrap();
+    let stale = Session::load(&p).unwrap();
+    assert!(!stale.fresh());
+    assert_eq!(stale.result.unwrap().table, s.result.unwrap().table);
 }

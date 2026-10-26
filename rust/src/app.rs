@@ -233,8 +233,29 @@ impl Session {
     fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
         let mut session: Self = serde_json::from_slice(bytes).map_err(|e| e.to_string())?;
         session.validate()?;
-        // Imported project diagnostics are re-established by calculation before export.
+        // Verify the saved baseline, retaining deliberate result edits only for matching inputs.
+        let matched = session.fresh();
         session.calculated_from = None;
+        if matched {
+            let baseline = model::calculate(
+                &session.engine,
+                &session.request,
+                &parse_axis(&session.settings.rpm, false)?,
+                &parse_axis(&session.settings.grip, true)?,
+                session.settings.threshold,
+                session.settings.tolerance,
+            )?;
+            if session.raw.as_ref() == Some(&baseline.table)
+                && session.result.as_ref().is_some_and(|r| {
+                    r.table.rpm == baseline.table.rpm
+                        && r.table.axis == baseline.table.axis
+                        && r.status == baseline.status
+                        && r.outside == baseline.outside
+                })
+            {
+                session.calculated_from = Some(session.input_key());
+            }
+        }
         Ok(session)
     }
     pub fn save_checked(&self, path: &Path, expected: &[u8]) -> Result<(), String> {
@@ -530,7 +551,7 @@ impl App {
                     self.redo.clear();
                     self.dirty = false;
                     self.row = 0;
-                    self.message = "Project opened. Recalculate before exporting.".into();
+                    self.message = if self.session.fresh() { "Project opened. Saved result and corrections verified against the inputs." } else { "Project opened. Inputs or calculation baseline differ; recalculate before exporting." }.into();
                 }
                 Err(e) => self.message = e,
             }

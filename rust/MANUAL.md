@@ -36,7 +36,7 @@ A calculated map must be validated on a dyno before riding. Check its behaviour 
 
 ## Sessions and shortcuts
 
-Save a session as a JSON .openetv file to retain inputs, settings and result together. Open a session to continue that work. Save refuses to overwrite a project changed by another application; use Save as with another filename. A loaded result requires recalculation before export so the result is checked against the current calculation.
+Save a session as a JSON .openetv file to retain inputs, settings and result together. Open a session to continue that work. Save refuses to overwrite a project changed by another application; use Save as with another filename. When opening a project, OpenETV recomputes and verifies the saved baseline. Matching projects retain deliberate result corrections; changed inputs or a mismatched baseline require recalculation before export.
 
 Command-S saves a session. Command-Z undoes an action; Command-Shift-Z redoes it. On platforms using Control for standard shortcuts, use Control instead of Command.
 

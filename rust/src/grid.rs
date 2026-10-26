@@ -77,9 +77,9 @@ pub fn editor(
             for i in 0..draft.rpm.len(){
                 cell(ui,&mut draft.rpm[i],(i+1,0),&mut selected,key,active,!axes_editable,&format!("Row {} RPM",i+1),&mut changed);
                 for j in 0..draft.axis.len(){
-                    ui.vertical(|ui|{
+                    ui.horizontal(|ui|{
                         cell(ui,&mut draft.values[i][j],(i+1,j+1),&mut selected,key,active,read_only,&format!("Value at {} RPM, {} percent",table.rpm[i],table.axis[j]),&mut changed);
-                        if let Some(s)=status.and_then(|rows|rows.get(i)).and_then(|row|row.get(j)) {let (symbol,tip)=match s{Status::Ok=>("·","Torque request reached"),Status::Saturated=>("▲","Torque saturated"),Status::BelowMin=>("▽","Below closed-throttle torque"),Status::NonMonotonic=>("!","Engine torque falls below the request at a larger opening")};ui.small(symbol).on_hover_text(tip);}
+                        if let Some(s)=status.and_then(|rows|rows.get(i)).and_then(|row|row.get(j)) {let (symbol,tip)=match s{Status::Ok=>("","Torque request reached"),Status::Saturated=>("▲","Torque saturated"),Status::BelowMin=>("▽","Below closed-throttle torque"),Status::NonMonotonic=>("!","Engine torque falls below the request at a larger opening")};ui.add_sized([10.,18.],egui::Label::new(egui::RichText::new(symbol).small())).on_hover_text(tip);}
                     });
                 }
                 ui.end_row();
@@ -129,7 +129,7 @@ fn cell(
     changed: &mut bool,
 ) {
     let response = if read_only {
-        ui.selectable_label(*selected == position, format!("{value:.2}"))
+        ui.selectable_label(*selected == position, format!("{value}"))
     } else {
         ui.add(egui::DragValue::new(value).speed(0.1).max_decimals(4))
     };
@@ -158,15 +158,17 @@ pub fn chart(
         return;
     }
     *row = (*row).min(table.rpm.len() - 1);
-    ui.horizontal(|ui| {
-        egui::ComboBox::from_id_salt((ui.id(), "rpm", unit))
-            .selected_text(format!("{} RPM", table.rpm[*row]))
-            .show_ui(ui, |ui| {
-                for (i, rpm) in table.rpm.iter().enumerate() {
-                    ui.selectable_value(row, i, format!("{rpm} RPM"));
-                }
-            });
-    });
+    if table.rpm.len() > 1 {
+        ui.horizontal(|ui| {
+            egui::ComboBox::from_id_salt((ui.id(), "rpm", unit))
+                .selected_text(format!("{} RPM", table.rpm[*row]))
+                .show_ui(ui, |ui| {
+                    for (i, rpm) in table.rpm.iter().enumerate() {
+                        ui.selectable_value(row, i, format!("{rpm} RPM"));
+                    }
+                });
+        });
+    }
     let extra = overlay.filter(|t| t.validate().is_ok()).map(|t| {
         table
             .axis
@@ -193,9 +195,9 @@ pub fn chart(
         Sense::hover(),
     );
     let painter = ui.painter_at(rect);
-    painter.rect_filled(rect, 5.0, Color32::from_rgb(15, 22, 32));
+    painter.rect_filled(rect, 5.0, crate::look::SCOPE);
     let plot = Rect::from_min_max(
-        rect.min + Vec2::new(52.0, 15.0),
+        rect.min + Vec2::new(52.0, 30.0),
         rect.max - Vec2::new(16.0, 32.0),
     );
     let x_min = table.axis[0];
@@ -224,8 +226,8 @@ pub fn chart(
         );
     }
     for (values, color) in [
-        (Some(primary), Color32::from_rgb(64, 200, 230)),
-        (extra.as_ref(), Color32::from_rgb(250, 185, 75)),
+        (Some(primary), crate::look::CYAN),
+        (extra.as_ref(), crate::look::AMBER),
     ] {
         if let Some(values) = values {
             let points: Vec<_> = table

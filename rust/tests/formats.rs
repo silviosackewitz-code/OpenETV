@@ -189,3 +189,10 @@ fn original_ecu_exports_when_reference_is_available() {
         );
     }
 }
+
+#[test]
+fn spreadsheet_paste_accepts_semicolons_and_decimal_commas() {
+    let t = Table::new(vec![1000.], vec![0., 100.], vec![vec![1., 2.]]).unwrap();
+    let p = paste_block(&t, 1, 1, "3,5;4,5").unwrap();
+    assert_eq!(p.values, vec![vec![3.5, 4.5]]);
+}
