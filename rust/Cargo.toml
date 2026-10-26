@@ -1,0 +1,32 @@
+[package]
+name = "openetv"
+version = "0.3.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+eframe = { version = "=0.36.2", default-features = false, features = ["default_fonts", "glow", "accesskit", "x11", "wayland"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rfd = "=0.17.2"
+csv = "=1.4.0"
+roxmltree = "=0.20.0"
+calamine = "0.35"
+rust_xlsxwriter = "0.96"
+tempfile = "3"
+encoding_rs = "0.8"
+zip = { version = "7.4", default-features = false }
+
+[dev-dependencies]
+egui_kittest = { version = "=0.36.2", default-features = false }
+png = "=0.18.1"
+
+[profile.release]
+lto = "thin"
+strip = true
+
+[profile.dev]
+debug = 0
+
+[profile.test]
+debug = 0

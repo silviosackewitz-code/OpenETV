@@ -1,0 +1,25 @@
+{
+  "source_crate": "typst-assets",
+  "version": "0.14.2",
+  "commit": "38eadb63561c7481e08520732a3f10b926473d1f",
+  "purpose": "Manual symbols not covered by the primary embedded fonts. No whole Typst font bundle.",
+  "files": [
+    {
+      "file": "DejaVuSansMono.ttf",
+      "bytes": 340712,
+      "sha256": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582",
+      "url": "https://raw.githubusercontent.com/typst/typst-assets/38eadb63561c7481e08520732a3f10b926473d1f/files/fonts/DejaVuSansMono.ttf"
+    },
+    {
+      "file": "NewCMMath-Regular.otf",
+      "bytes": 1151568,
+      "sha256": "ad746f5307fed53d8e5d7d201f5054abe73f1f47c51040767d898e3481c6e648",
+      "url": "https://raw.githubusercontent.com/typst/typst-assets/38eadb63561c7481e08520732a3f10b926473d1f/files/fonts/NewCMMath-Regular.otf"
+    },
+    {
+      "file": "NOTICE-PDF-fallbacks.txt",
+      "sha256": "2fe0ab87916eb54b6f31e17523c3d661e65b21dc558392cd3cd1c28e46255b28",
+      "url": "https://raw.githubusercontent.com/typst/typst-assets/38eadb63561c7481e08520732a3f10b926473d1f/NOTICE"
+    }
+  ]
+}

@@ -19,3 +19,6 @@ reference/
 # PyInstaller build output (the .spec file itself is kept and versioned)
 build/
 dist/
+
+# Native Rust build output
+/rust/target/
