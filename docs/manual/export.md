@@ -1,3 +1,5 @@
+> Archived browser interface. For the native app, use the [current manual](../../rust/MANUAL.md).
+
 # 5 · Export
 
 The finished map as a file — for the ECU software, or for a spreadsheet.

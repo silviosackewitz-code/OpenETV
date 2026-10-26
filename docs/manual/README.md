@@ -1,3 +1,5 @@
+> **Archived browser interface manual.** OpenETV 0.3.0 uses a native Rust window. Read the current [native manual](../../rust/MANUAL.md), also embedded in the application. The pages below describe the previous interface.
+
 # OpenETV — manual
 
 How to use the app, one page per step of the window. The pages describe what

@@ -1,3 +1,5 @@
+> Archived browser interface. For the native app, use the [current manual](../../rust/MANUAL.md).
+
 # 2 · Torque request
 
 What the rider asks for: rows are engine speed, columns are the pedal (the

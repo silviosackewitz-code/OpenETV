@@ -1,3 +1,5 @@
+> Archived browser interface. For the native app, use the [current manual](../../rust/MANUAL.md).
+
 # Getting started
 
 OpenETV computes the throttle map of a ride-by-wire ECU: how far the throttle

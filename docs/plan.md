@@ -1,3 +1,11 @@
+# Native migration — 2026-10-26
+
+The Rust/egui application in `rust/` supersedes the browser runtime described below.
+The five-step workflow and established numbers are retained. Added: reverse ETV
+lookup, project files, undo/redo, table tools, modelled-torque comparison and an
+interactive explanation. The active manual is [rust/MANUAL.md](../rust/MANUAL.md).
+The historical plan is retained below for context.
+
 # Plan: OpenETV rebuilt on the structure and look of Race Analysis
 
 Written 2026-09-18. Two parts: what a review of the calculation found (it

@@ -1,3 +1,5 @@
+> Archived browser interface. For the native app, use the [current manual](../../rust/MANUAL.md).
+
 # Appearance
 
 How the window looks, and the **?** marks that open this manual.

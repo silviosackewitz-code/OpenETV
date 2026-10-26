@@ -1,3 +1,5 @@
+> Archived browser interface. For the native app, use the [current manual](../../rust/MANUAL.md).
+
 # 3 · Calculation
 
 Here the map is computed: per engine speed the app reads the engine's torque

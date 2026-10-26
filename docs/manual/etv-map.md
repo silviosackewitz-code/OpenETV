@@ -1,3 +1,5 @@
+> Archived browser interface. For the native app, use the [current manual](../../rust/MANUAL.md).
+
 # 4 · ETV map
 
 The result: the throttle position in % the ECU drives to, over engine speed

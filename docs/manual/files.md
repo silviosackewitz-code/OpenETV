@@ -1,3 +1,5 @@
+> Archived browser interface. For the native app, use the [current manual](../../rust/MANUAL.md).
+
 # Files
 
 Which files OpenETV reads and writes, and what a table has to look like.

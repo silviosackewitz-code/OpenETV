@@ -7,13 +7,13 @@ The calculation and file handling remain local. CSV, XLSX and Mectronik DSS inpu
 ## Workflow additions
 
 - Recover a modelled torque request from an existing ETV throttle map and the loaded engine table.
-- Save and open complete JSON .openetv sessions. Recalculate a loaded result before export.
+- Save and open complete JSON .openetv sessions. The saved baseline is verified on load; matching projects retain result corrections.
 - Undo and redo the latest 40 actions, including table edits and result adjustments.
 - Mark results stale when their inputs or calculation settings change; require recalculation before export.
 - Inspect table heatmaps and line charts, with labelled table and comparison series.
-- Retain system, dark and light themes and an accent preference in the existing preferences file.
+- Reuse Dark, Light, Industrial and Terminal, system following, IBM Plex and JetBrains Mono, with interface scaling and an accent preference.
 
-The in-app manual is embedded in the binary from MANUAL.md. Manual screenshots have not been produced for the native interface.
+The in-app manual is embedded in the binary from MANUAL.md. Native screenshots rendered with the headless egui harness and synthetic examples are in [docs/native](../docs/native/README.md).
 
 ## Model and scope
 

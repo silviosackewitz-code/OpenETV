@@ -1,92 +1,40 @@
-# OpenETV — working conventions
+# OpenETV - working conventions
 
-The same conventions as Race Analysis (`../Race_Analysis/CLAUDE.md`); OpenETV
-is being rebuilt on that project's structure and look. The plan, with the
-review of the calculation it starts from, is [`docs/plan.md`](docs/plan.md) —
-tick a step there when it is done.
+OpenETV is a Rust/egui desktop application. The Python calculation remains as a reference implementation for numerical comparisons. The former browser UI is retained as legacy source, not the app runtime.
 
-## Language
-- Everything that belongs to the app is written in **English**: code,
-  identifiers, comments, docs, commit messages.
-- Conversation with the maintainer is in German.
+## Language and publication
 
-## Commits
-- One logical change per commit. Every commit must pass the test suite.
-- **Do not push without asking.** `origin` is a public GitHub repository. A
-  version tag (`v0.2.0`) starts `.github/workflows/release.yml`, which builds
-  on three systems and drafts a release — never push a tag without asking.
-- **Nothing from the maintainer's books goes into the repository** — no text,
-  no paraphrased passages, no example numbers, no figures, not in files and
-  not in commit messages (the repository is public). Notes on them stay in
-  `.reference/`, which git ignores. The freely distributed manual of the
-  original tool may be referred to. Before a push, search what goes up:
-  `git log -p origin/main..HEAD | grep -i book`.
-- A change to what the calculation returns is never mixed with a
-  refactoring: the result goes into an ECU that moves a throttle. Such a
-  change gets its own commit and its own tests, and the maintainer decides it
-  first.
+App code, comments, documentation and commits are English. Conversation with the maintainer is German.
+
+One logical change per commit; every commit must pass its relevant checks. Do not push without asking unless the maintainer already explicitly authorized that push in the current session. Never push a version tag without explicit authorization: it starts the three-platform draft release workflow.
+
+Nothing from the maintainer's books goes into the public repository: no text, paraphrases, example numbers, figures or commit-message material. Private notes and real ECU exports remain in ignored `.reference/`. The original freely distributed tool manual may be referenced. Before publishing, inspect the outgoing diff and history for private content.
+
+Calculation changes affect an ECU throttle target. Keep changes to numerical behaviour separate from refactoring, cover them with tests and obtain the maintainer's decision before changing established behaviour or defaults.
+
+## Native structure
+
+- `rust/src/model.rs`: table validation, engine interpolation, inversion, generation and result adjustments.
+- `rust/src/formats.rs`: CSV, XLSX, DSS; preserve units and atomic saves.
+- `rust/src/app.rs`, `grid.rs`: five-step window, editing, charts, stale-result protection and undo.
+- `rust/src/look/`, `rust/assets/look/`: copied RaceAnalysis/RaceDash themes, fonts and icons. Preserve provenance and licences. Make shared appearance changes upstream and copy them deliberately; do not create independent colour definitions in product pages.
+- `rust/MANUAL.md`: embedded native manual through `rust/src/manual.rs`. Every app change must update its manual text when behaviour changes.
+- `rust/NATIVE-MIGRATION.md`: native migration scope and public-source rationale.
+- `tools/etvlib/`: Python numerical reference and legacy browser application.
+- `docs/manual/`: archived browser interface manual; do not present it as the current native UI.
+
+Keep implementation small, use established helpers and avoid additional frameworks. Tables in Nm and throttle maps in percent are distinct inputs. Never silently reinterpret units or change an axis to make an import fit. Stale results must be recalculated before export. Restored results retain their corrections only after verifying the saved baseline against the current inputs.
 
 ## Checks
-- Tests: `.venv/bin/python -m pytest`. Tests against real ECU exports need
-  `.reference/` (local only) and skip without it. This includes the window's
-  JavaScript (`tools/tests/js/`, needs Node) and a click-through in WebKit
-  (`test_etv_browser.py`, needs `.venv/bin/python -m playwright install webkit`
-  once). UI changes: run the browser tests and extend them.
-- Trying something in a browser by script is not enough for the grid: without
-  system focus no focus events fire, and a click places its caret *after* the
-  focus — both were found only by the WebKit click-through with real keys.
-- Lint: `.venv/bin/ruff check .` (also in CI, `tests.yml`).
-- Chained commands that commit after tests: use `set -o pipefail`.
-- Build: `bash packaging/build.sh` (output goes to `../../OpenETV_App`, outside
-  the repo; `OPENETV_APP_DIR` names another place). A finished build proves
-  little: run the built app (`…/OpenETV.app/Contents/MacOS/OpenETV --no-browser
-  --port 8768` with `OPENETV_HOME=<folder>`) and ask it for its pages, a
-  calculation and an Excel export. A new file the server serves has to be in
-  `packaging/openetv.spec` — `test_packaging.py` checks that.
 
-## Where things are
-- The calculation: `tools/etvlib/` — numpy only, no window. `core.py` (inverting the engine table, post-processing), `curves.py`
-  (generating a torque request), `tables.py` (a table, CSV and Excel),
-  `dss.py` (Mectronik DataSubset files).
-- The server: `etvlib/server.py` (127.0.0.1 only, host check, a token per
-  run embedded in the page — built like `racelib/server.py`) and `etvlib/api.py`
-  (the routes under `/api/`; the server keeps nothing between requests, the
-  page holds the tables).
-- The window: `etvlib/etv/` — `etv.html`, `etv.css` and one ES module per
-  area, no build step. The rules are those of the analyzer in Race Analysis:
-  **nothing runs on import** (each module wires itself in `init()`, `main.js`
-  calls them in a fixed order), **shared state only in `state.js`**, and a
-  module **says what changed** (`events.js`: `engine`, `request`, `settings`,
-  `result`, `step`) instead of calling whoever shows it —
-  `test_etv_import_graph.py` fails on an import ring. `tablemath.js` (what an
-  editable table does to its numbers) and `ramp.js` (the heatmaps' value ramp,
-  the one module that may name colours) touch neither page nor server, so Node
-  tests them. `etvlib/ui.py` opens the page in a pywebview window, or in the
-  browser without it; saving goes through the window's save dialog
-  (`/api/save`), in a browser through its downloads.
-- The user manual: `docs/manual/`, one Markdown page per step, shown in the
-  window under **Manual** (`etvlib/manual.py`); headings get ids for the "?"
-  marks (`data-help="etv-map#zero-gas-fix"`, the shared `help.js`). Writing
-  guide in `docs/manual/README.md` (no ``` fences — the renderer ignores
-  them). Screenshots only with `.venv/bin/python tools/screenshots.py`, never
-  by hand.
-- **Every change to the app: check the manual page of that function and update
-  it** — text, screenshots, the index in `docs/manual/README.md`, `data-help`
-  anchors. A change is not done while its manual page describes the old state.
-- The look: `theme.css`, `fonts.css`, `fonts/`, `theme.py`, `theme.js`,
-  `prefs.js`, `common.js`, `icons.js` in `tools/etvlib/` are **copies from Race
-  Analysis — never edit them here**; `tools/sync_look.py` fetches them again
-  (rules: `docs/design.md`). Pages name no colour, only roles of the theme.
-  Preferences (theme, accent): `etvlib/prefs.py`, `~/.openetv/prefs.json`;
-  try the app with `OPENETV_HOME=<folder>` so as not to write one's own.
-- `.reference/` is not in git: the manual of the original tool and two real
-  ECU exports. `torque demand.dss` there holds **throttle in %**, not torque —
-  see the review in `docs/plan.md`.
+Run `cargo fmt --manifest-path rust/Cargo.toml --check`, `cargo clippy --manifest-path rust/Cargo.toml --locked --all-targets -j3 -- -D warnings`, and `cargo test --manifest-path rust/Cargo.toml --locked -j3`.
 
-## Trying the app
-- `PYTHONPATH=tools .venv/bin/python -m etvlib` (`--browser` opens the page in
-  the browser instead); `--port 8766 --no-browser` starts the server only, at
-  a fixed address
-  (`openetv-server` in `.claude/launch.json`). A session started in another
-  project does not see this `launch.json` — start the server in the
-  background and open its address instead.
+After building the debug binary, run `.venv/bin/python rust/verify_reference.py --reference . --binary rust/target/debug/openetv`. Reference-only tests are `.venv/bin/python -m pytest tools/tests/test_core.py tools/tests/test_curves.py tools/tests/test_tables.py tools/tests/test_dss.py`. Optional private ECU fixtures must stay private, including failure diagnostics. Legacy browser tests do not verify the native interface.
+
+UI changes require the native headless interaction tests and rendered screenshots. Check actual OS interaction before a public release; headless tests do not prove file-dialog or window-manager behaviour. Test with `OPENETV_HOME` pointing to a scratch directory to preserve personal preferences.
+
+## Packaging
+
+Version is in `rust/Cargo.toml`. `bash packaging/build.sh` builds macOS/Linux; `packaging/build.ps1` builds Windows. Default output remains `../../OpenETV_App`; override with `OPENETV_APP_DIR`. These scripts package only and must not install or replace an installed application. The macOS output is an ad-hoc-signed `.app` and DMG; Windows uses ZIP and Linux tar.gz. No Python runtime, local HTTP server or browser is needed.
+
+Before delivery, run the packaged executable in batch mode, check its five steps through the native harness and file round trips, and record what was actually verified. A successful compile is not a GUI check. Do not claim cross-platform runtime validation from a macOS build.

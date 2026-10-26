@@ -1,3 +1,5 @@
+> Archived browser interface. For the native app, use the [current manual](../../rust/MANUAL.md).
+
 # 1 · Engine torque
 
 What the engine really delivers: rows are engine speed, columns are throttle
