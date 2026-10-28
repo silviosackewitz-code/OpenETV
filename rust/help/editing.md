@@ -10,6 +10,8 @@ The coloured cells are editable. The colour bar shows their range; colour descri
 | Paste spreadsheet cells | Replace a rectangular block starting at the chosen cell. Invalid blocks leave the table unchanged. |
 | **Table tools** → **Copy table** | Copy the whole map, including breakpoints. |
 
+Tables show every row without a separate vertical scrollbar. If the map is taller than the window, scroll the page; wide maps scroll horizontally.
+
 ## Table tools
 
 1. Choose a cell, row header or column header.

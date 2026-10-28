@@ -2,6 +2,10 @@
 
 Choose the output breakpoints, then click **Calculate ETV map** to open the result.
 
+Drag a breakpoint to adjust it, or double-click to type. Enter a **New RPM** or **New pedal** value and click **Add RPM** or **Add pedal**. **×** removes a point; at least one point stays on each axis. Values stay in ascending order.
+
+The generator uses these same breakpoints. **Undo** restores a change.
+
 | Field | What it changes |
 |---|---|
 | **Output RPM breakpoints** | The result's rows. |

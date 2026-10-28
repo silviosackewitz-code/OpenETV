@@ -1,6 +1,16 @@
 # Native validation — 2026-10-27
 
-OpenETV 0.4.0, macOS / Apple Silicon:
+## OpenETV 0.4.1 — macOS / Apple Silicon
+
+- 45 native tests passed, including individual breakpoint editing, insertion, removal, duplicate prevention, undo, project round trips and generator/calculation agreement.
+- A 16-row synthetic map verifies that the last row is visible and editable below the former 420-pixel clipping boundary, before the chart.
+- All 375 frozen synthetic numerical cases still match in Rust and the batch interface. Calculation code and defaults are unchanged.
+- The five workflow pages, nine Manual topics, working-principle view, light map and tall map were rendered with the native harness. Changed help pages and breakpoint layout were visually inspected.
+- Cargo fmt and Clippy with warnings denied passed.
+
+Windows/Linux runtime and ECU/dyno behaviour have not been validated. macOS packages are ad-hoc signed, not Apple-notarized.
+
+## Previous verification — 0.4.0
 
 - 43 native tests passed. Unit and integration tests cover formats, atomic saves, project restore, calculations, clipboard editing, undo, protected result axes, contextual help and result-view switching.
 - 375 distinct frozen synthetic cases check numerical compatibility in Rust and through the executable's batch interface. No Python environment is used.

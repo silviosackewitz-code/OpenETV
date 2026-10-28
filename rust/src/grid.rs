@@ -77,9 +77,8 @@ pub fn editor(
         *table = Table::new(draft.rpm, draft.axis, draft.values)?;
         return Ok(true);
     }
-    egui::ScrollArea::both()
+    egui::ScrollArea::horizontal()
         .id_salt((id, "scroll"))
-        .max_height(420.0)
         .show(ui, |ui| {
             egui::Grid::new((id, "cells"))
                 .spacing([2.0, 2.0])

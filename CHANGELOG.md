@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1
+
+- Edit generator and output breakpoints individually, with labelled add/remove controls and units.
+- Arrange calculation settings in labelled rows.
+- Show every map row without a fixed-height inner scrollbar; tall maps use page scrolling.
+
 ## 0.4.0
 
 - Remove the former HTML/JavaScript/Python application, tooling, packaging and archived manual. Build and test only Rust.

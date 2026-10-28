@@ -191,3 +191,119 @@ fn help_pages_and_light_map_pictures() {
     h.run();
     picture::picture(&h, &collector, &dir.join("light-map.png"), 1.);
 }
+
+#[test]
+fn breakpoint_controls_add_edit_remove_and_undo() {
+    let mut app = App::new();
+    app.step = 2;
+    let mut h = Harness::builder()
+        .with_size(egui::vec2(1400., 1000.))
+        .build_ui_state(|ui, app: &mut App| app.show(ui), app);
+    h.run();
+    let original = h.state().session.settings.clone();
+    h.get_by_label("Add RPM").click();
+    h.run();
+    assert_eq!(
+        parse_axis(&h.state().session.settings.rpm, false).unwrap()[0],
+        0.
+    );
+    h.get_by_label("Remove RPM breakpoint 1").click();
+    h.run();
+    assert_eq!(h.state().session.settings.rpm, original.rpm);
+    h.get_by_label("Undo").click();
+    h.run();
+    assert_eq!(
+        parse_axis(&h.state().session.settings.rpm, false).unwrap()[0],
+        0.
+    );
+    h.get_by_label("RPM breakpoint 1").focus();
+    h.run();
+    h.get_by_label("RPM breakpoint 1").type_text("1000");
+    h.key_press(egui::Key::Enter);
+    h.run();
+    assert_eq!(
+        parse_axis(&h.state().session.settings.rpm, false).unwrap()[0],
+        1000.
+    );
+    h.get_by_label("RPM breakpoint 1").focus();
+    h.run();
+    h.get_by_label("RPM breakpoint 1").type_text("3000");
+    h.key_press(egui::Key::Enter);
+    h.run();
+    assert_eq!(
+        parse_axis(&h.state().session.settings.rpm, false).unwrap()[0],
+        1000.
+    );
+    h.get_by_label("New pedal value").focus();
+    h.run();
+    h.get_by_label("New pedal value").type_text("15");
+    h.key_press(egui::Key::Enter);
+    h.run();
+    h.get_by_label("Add pedal").click();
+    h.run();
+    let points = parse_axis(&h.state().session.settings.grip, true).unwrap();
+    assert_eq!(&points[..4], &[0., 10., 15., 20.]);
+    h.get_by_label("Add pedal").click();
+    h.run();
+    assert_eq!(
+        parse_axis(&h.state().session.settings.grip, true).unwrap(),
+        points
+    );
+    h.get_by_label("Calculate ETV map").click();
+    h.run();
+    assert!(h.state().session.fresh());
+    assert_eq!(
+        h.state().session.result.as_ref().unwrap().table.axis,
+        points
+    );
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("breakpoints.openetv");
+    h.state().session.save(&path).unwrap();
+    assert_eq!(
+        Session::load(&path).unwrap().settings,
+        h.state().session.settings
+    );
+    h.get_by_label("2   Torque request").click();
+    h.run();
+    h.get_by_label("Generate a torque request").click();
+    h.run();
+    assert!(h.query_by_label("RPM breakpoint 1").is_some());
+    h.get_by_label("Generate request").click();
+    h.run();
+    assert_eq!(h.state().session.request.axis, points);
+}
+
+#[test]
+fn tall_map_shows_all_rows_before_the_chart() {
+    let mut app = App::new();
+    app.session.engine = model::Table::new(
+        (0..16).map(|i| f64::from(i * 500 + 3000)).collect(),
+        vec![0., 50., 100.],
+        vec![vec![0., 30., 60.]; 16],
+    )
+    .unwrap();
+    let collector = picture::Collector::default();
+    let mut h = Harness::builder()
+        .with_size(egui::vec2(1400., 1100.))
+        .renderer(collector.clone())
+        .build_ui_state(|ui, app: &mut App| app.show(ui), app);
+    h.run();
+    let first = h.get_by_label("Value at 3000 RPM, 0 percent").rect();
+    let last = h.get_by_label("Value at 10500 RPM, 0 percent").rect();
+    assert!(last.top() - first.top() > 420.);
+    assert!(last.bottom() < 1000.);
+    assert!(h.get_by_label("Torque curve").rect().top() > last.bottom());
+    h.get_by_label("Value at 10500 RPM, 0 percent").click();
+    h.run();
+    h.event(egui::Event::Paste("5".into()));
+    h.run();
+    assert_eq!(h.state().session.engine.values[15][0], 5.);
+    if let Some(dir) = std::env::var_os("OPENETV_PICTURES") {
+        picture::picture(
+            &h,
+            &collector,
+            &std::path::PathBuf::from(dir).join("tall-map.png"),
+            1.,
+        );
+    }
+}

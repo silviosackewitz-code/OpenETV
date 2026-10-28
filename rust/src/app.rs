@@ -65,6 +65,129 @@ pub fn parse_axis(text: &str, percent: bool) -> Result<Vec<f64>, String> {
     }
     Ok(values)
 }
+fn breakpoint_editor(ui: &mut egui::Ui, title: &str, text: &mut String, percent: bool) {
+    let Ok(mut values) = parse_axis(text, percent) else {
+        ui.colored_label(
+            look::AMBER,
+            "Invalid breakpoints. Import a valid request table.",
+        );
+        return;
+    };
+    let unit = if percent { "%" } else { "RPM" };
+    let name = if percent { "pedal" } else { "RPM" };
+    let limit = if percent { 100. } else { f64::MAX };
+    let speed = if percent { 0.1 } else { 100. };
+    let mut changed = false;
+    let mut remove = None;
+    let mut overlap = false;
+    ui.push_id(title, |ui| {
+        ui.group(|ui| {
+            ui.strong(format!("{title} · {} points", values.len()));
+            ui.horizontal_wrapped(|ui| {
+                for i in 0..values.len() {
+                    ui.allocate_ui_with_layout(
+                        egui::vec2(118., 28.),
+                        egui::Layout::left_to_right(egui::Align::Center),
+                        |ui| {
+                            ui.push_id(i, |ui| {
+                                let mut value = values[i];
+                                let low = if i == 0 { 0. } else { values[i - 1] };
+                                let high = values.get(i + 1).copied().unwrap_or(limit);
+                                let response = ui.add_sized(
+                                    [76., 26.],
+                                    egui::DragValue::new(&mut value)
+                                        .range(low..=high)
+                                        .speed(speed)
+                                        .update_while_editing(false),
+                                );
+                                response.widget_info(|| {
+                                    egui::WidgetInfo::labeled(
+                                        egui::WidgetType::DragValue,
+                                        true,
+                                        format!("{name} breakpoint {}", i + 1),
+                                    )
+                                });
+                                if response.changed() && value.is_finite() {
+                                    if values
+                                        .iter()
+                                        .enumerate()
+                                        .any(|(j, x)| j != i && *x == value)
+                                    {
+                                        overlap = true;
+                                    } else {
+                                        values[i] = value;
+                                        changed = true;
+                                    }
+                                }
+                                let response =
+                                    ui.add_enabled(values.len() > 1, egui::Button::new("×"));
+                                let label = format!("Remove {name} breakpoint {}", i + 1);
+                                response.widget_info(|| {
+                                    egui::WidgetInfo::labeled(
+                                        egui::WidgetType::Button,
+                                        values.len() > 1,
+                                        &label,
+                                    )
+                                });
+                                if response.on_hover_text(label).clicked() {
+                                    remove = Some(i);
+                                }
+                            });
+                        },
+                    );
+                }
+            });
+            ui.add_space(4.);
+            let key = ui.id().with("new breakpoint");
+            let mut new_value = ui.ctx().data_mut(|d| d.get_temp::<f64>(key)).unwrap_or(0.);
+            ui.horizontal(|ui| {
+                ui.label(format!("New {name}"));
+                let response = ui.add(
+                    egui::DragValue::new(&mut new_value)
+                        .range(0. ..=limit)
+                        .speed(speed)
+                        .suffix(format!(" {unit}"))
+                        .update_while_editing(false),
+                );
+                response.widget_info(|| {
+                    egui::WidgetInfo::labeled(
+                        egui::WidgetType::DragValue,
+                        true,
+                        format!("New {name} value"),
+                    )
+                });
+                let unique = new_value.is_finite() && !values.contains(&new_value);
+                if ui
+                    .add_enabled(
+                        unique && values.len() < 1024,
+                        egui::Button::new(format!("Add {name}")),
+                    )
+                    .on_disabled_hover_text(
+                        "Choose a value not already in the list (maximum 1024 points).",
+                    )
+                    .clicked()
+                {
+                    values.push(new_value);
+                    values.sort_by(f64::total_cmp);
+                    changed = true;
+                }
+                ui.weak("Drag to adjust · double-click to type");
+            });
+            ui.ctx().data_mut(|d| d.insert_temp(key, new_value));
+            if overlap {
+                ui.colored_label(look::AMBER, "Keep neighbouring breakpoints distinct.");
+            }
+        });
+    });
+    if let Some(i) = remove {
+        values.remove(i);
+        changed = true;
+    }
+    if changed {
+        *text = axis_text(&values);
+    }
+    ui.add_space(8.);
+}
 fn checked_table(table: &Table, throttle: bool) -> Result<(), String> {
     table.validate()?;
     if table.rpm.len() * table.axis.len() > 20_000 {
@@ -803,7 +926,8 @@ impl App {
             ui.add(egui::DragValue::new(&mut s.max_percent).range(0. ..=100.).suffix("% of maximum torque"));});
             ui.checkbox(&mut s.per_rpm,"Scale to maximum at each RPM (torque follows engine speed)");
             ui.small("Unchecked: the same pedal asks for the same Nm, capped by available torque. Cable-like is an illustrative curve, not a measured cable model.");
-            ui.label("Generator RPM breakpoints");ui.text_edit_singleline(&mut s.rpm);ui.label("Pedal breakpoints (%)");ui.text_edit_singleline(&mut s.grip);
+            breakpoint_editor(ui, "Generator RPM breakpoints", &mut s.rpm, false);
+            breakpoint_editor(ui, "Pedal breakpoints (%)", &mut s.grip, true);
             generate=ui.button("Generate request").clicked();
         });
         if self.session.settings != before.settings {
@@ -875,27 +999,33 @@ impl App {
         let before = self.session.clone();
         let s = &mut self.session.settings;
         ui.add_space(12.);
-        ui.label("Output RPM breakpoints");
-        ui.text_edit_singleline(&mut s.rpm);
-        ui.label("Output pedal breakpoints (%)");
-        ui.text_edit_singleline(&mut s.grip);
-        ui.horizontal_wrapped(|ui| {
-            ui.add(
-                egui::DragValue::new(&mut s.threshold)
-                    .range(0. ..=100000.)
-                    .speed(100.)
-                    .prefix("RPM calc method "),
-            );
-            ui.add(
-                egui::DragValue::new(&mut s.tolerance)
-                    .range(0. ..=1000.)
-                    .speed(0.1)
-                    .prefix("Max torque tolerance ")
-                    .suffix(" Nm"),
-            );
-        });
-        ui.label("Up to the threshold, saturation uses the first throttle breakpoint reaching maximum torque minus tolerance; above it, the last. Between breakpoints, both tables interpolate linearly.");
-        ui.label("All-zero engine rows are omitted. Outside its RPM range the nearest usable row is held and reported.");
+        breakpoint_editor(ui, "Output RPM breakpoints", &mut s.rpm, false);
+        breakpoint_editor(ui, "Output pedal breakpoints (%)", &mut s.grip, true);
+        ui.strong("Calculation settings");
+        egui::Grid::new("calculation settings")
+            .spacing([20., 8.])
+            .show(ui, |ui| {
+                let label = ui.label("RPM calc method");
+                ui.add(
+                    egui::DragValue::new(&mut s.threshold)
+                        .range(0. ..=100000.)
+                        .speed(100.)
+                        .suffix(" RPM"),
+                )
+                .labelled_by(label.id);
+                ui.end_row();
+                let label = ui.label("Max torque tolerance");
+                ui.add(
+                    egui::DragValue::new(&mut s.tolerance)
+                        .range(0. ..=1000.)
+                        .speed(0.1)
+                        .suffix(" Nm"),
+                )
+                .labelled_by(label.id);
+                ui.end_row();
+            });
+        ui.small("These settings affect maximum-torque cells. See ? → Calculation reference for details.");
+        ui.add_space(12.);
         if self.session.settings != before.settings {
             self.record(before);
         }

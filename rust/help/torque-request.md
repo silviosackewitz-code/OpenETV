@@ -11,8 +11,9 @@ The request says how much torque the rider asks for at each RPM and grip positio
 ## Generate a request
 
 1. Open **Generate a torque request** and choose **Shape**.
-2. Set the share of maximum torque and the breakpoints. Open **Shape preview** to inspect the grip response.
-3. Click **Generate request** to replace the request table. **Undo** restores the previous table.
+2. Set the share of maximum torque. Drag individual breakpoints or double-click to type. Use **New RPM** / **New pedal** and **Add RPM** / **Add pedal** to insert points; **×** removes them.
+3. Open **Shape preview** to inspect the grip response.
+4. Click **Generate request** to replace the request table. **Undo** restores the previous table.
 
 | Choose | Get that |
 |---|---|
