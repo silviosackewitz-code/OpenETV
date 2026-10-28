@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- Add a native 3D surface view for engine torque, torque request and ETV maps.
+- Rotate, tilt and zoom with mouse or labelled controls; inspect point values on hover and reset the view.
+- Preserve actual breakpoint spacing and table colour scales; keep 3D viewing read-only.
+
 ## 0.4.1
 
 - Edit generator and output breakpoints individually, with labelled add/remove controls and units.

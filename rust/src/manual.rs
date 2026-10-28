@@ -1,6 +1,6 @@
 use eframe::egui::{self, TextFormat, text::LayoutJob};
 
-pub const PAGES: [(&str, &str); 9] = [
+pub const PAGES: [(&str, &str); 10] = [
     (
         "Build a throttle map",
         include_str!("../help/getting-started.md"),
@@ -19,6 +19,7 @@ pub const PAGES: [(&str, &str); 9] = [
         "Projects and appearance",
         include_str!("../help/projects.md"),
     ),
+    ("3D maps", include_str!("../help/3d-maps.md")),
 ];
 
 fn text(ui: &mut egui::Ui, line: &str) {

@@ -12,6 +12,8 @@ The coloured cells are editable. The colour bar shows their range; colour descri
 
 Tables show every row without a separate vertical scrollbar. If the map is taller than the window, scroll the page; wide maps scroll horizontally.
 
+Choose **3D map** to rotate the surface. Choose **Table** to edit cells. See **3D maps** for the controls.
+
 ## Table tools
 
 1. Choose a cell, row header or column header.

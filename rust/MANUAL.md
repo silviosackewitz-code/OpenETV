@@ -11,3 +11,4 @@ Open **Manual** in the app, or **?** beside a page title for help with that step
 - [Edit a map](help/editing.md)
 - [Calculation reference](help/reference.md)
 - [Projects and appearance](help/projects.md)
+- [3D maps](help/3d-maps.md): rotation, zoom, axes and point inspection.

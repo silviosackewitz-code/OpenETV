@@ -23,3 +23,5 @@ These edits change the target. **Undo** restores the previous result.
 | **Inputs changed** | Recalculate before editing or exporting. |
 
 Symbols describe the original calculation, even after corrections. **Torque comparison** shows modelled torque in cyan and requested torque in amber; it is not a measurement.
+
+Choose **3D map** above the map to rotate the full surface. **Table** returns to cell editing. See **3D maps** for the controls.

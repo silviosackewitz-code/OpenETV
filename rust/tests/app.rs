@@ -307,3 +307,145 @@ fn tall_map_shows_all_rows_before_the_chart() {
         );
     }
 }
+
+#[test]
+fn three_dimensional_maps_are_read_only_and_render_all_roles() {
+    use egui_kittest::kittest::NodeT;
+    let mut app = App::new();
+    app.session.calculate().unwrap();
+    let original = serde_json::to_value(&app.session).unwrap();
+    let collector = picture::Collector::default();
+    let mut h = Harness::builder()
+        .with_max_steps(20)
+        .with_size(egui::vec2(1400., 1100.))
+        .renderer(collector.clone())
+        .build_ui_state(|ui, app: &mut App| app.show(ui), app);
+    for step in [0, 1, 3] {
+        h.state_mut().step = step;
+        h.run();
+        h.get_by_label("3D map").click();
+        h.run();
+        assert!(h.query_by_label("Table tools").is_none());
+        let surface = h.get_by_label("3D map surface").rect();
+        let from = surface.center();
+        let yaw = h
+            .get_by_label("Rotation")
+            .accesskit_node()
+            .numeric_value()
+            .unwrap();
+        h.event(egui::Event::PointerMoved(from));
+        h.event(egui::Event::PointerButton {
+            pos: from,
+            button: egui::PointerButton::Primary,
+            pressed: true,
+            modifiers: egui::Modifiers::NONE,
+        });
+        h.run();
+        h.event(egui::Event::PointerMoved(from + egui::vec2(50., -20.)));
+        h.run();
+        h.event(egui::Event::PointerButton {
+            pos: from + egui::vec2(50., -20.),
+            button: egui::PointerButton::Primary,
+            pressed: false,
+            modifiers: egui::Modifiers::NONE,
+        });
+        h.run();
+        assert_ne!(
+            h.get_by_label("Rotation")
+                .accesskit_node()
+                .numeric_value()
+                .unwrap(),
+            yaw
+        );
+        h.event(egui::Event::MouseWheel {
+            unit: egui::MouseWheelUnit::Point,
+            phase: egui::TouchPhase::Move,
+            delta: egui::vec2(0., 100.),
+            modifiers: egui::Modifiers::NONE,
+        });
+        h.run();
+        assert!(
+            h.get_all_by_label("Zoom")
+                .next()
+                .unwrap()
+                .accesskit_node()
+                .numeric_value()
+                .unwrap()
+                > 1.
+        );
+        h.get_by_label("Reset view").click();
+        h.run();
+        assert_eq!(
+            h.get_all_by_label("Zoom")
+                .next()
+                .unwrap()
+                .accesskit_node()
+                .numeric_value()
+                .unwrap(),
+            1.
+        );
+        assert!(
+            (h.get_by_label("Rotation")
+                .accesskit_node()
+                .numeric_value()
+                .unwrap()
+                - yaw)
+                .abs()
+                < 1e-6
+        );
+        if let Some(dir) = std::env::var_os("OPENETV_PICTURES") {
+            picture::picture(
+                &h,
+                &collector,
+                &std::path::PathBuf::from(dir).join(format!("surface-step-{}.png", step + 1)),
+                1.,
+            );
+        }
+        h.event(egui::Event::Paste("999".into()));
+        h.run();
+        assert_eq!(serde_json::to_value(&h.state().session).unwrap(), original);
+        h.get_by_label("Table").click();
+        h.run();
+        assert!(h.query_by_label("Table tools").is_some());
+    }
+}
+
+#[test]
+fn flat_and_single_axis_surfaces_render_in_light_theme() {
+    let tables = [
+        model::Table::new(vec![3000.], vec![50.], vec![vec![7.]]).unwrap(),
+        model::Table::new(vec![3000.], vec![0., 20., 100.], vec![vec![-10., 5., 20.]]).unwrap(),
+        model::Table::new(vec![1000., 3000.], vec![50.], vec![vec![5.], vec![10.]]).unwrap(),
+        model::Table::new(vec![1000., 3000.], vec![0., 100.], vec![vec![7., 7.]; 2]).unwrap(),
+    ];
+    let collector = picture::Collector::default();
+    let mut h = Harness::builder()
+        .with_size(egui::vec2(900., 700.))
+        .renderer(collector.clone())
+        .build_ui_state(
+            |ui, table: &mut model::Table| {
+                openetv::look::apply(ui.ctx(), "light", [212, 0, 0]);
+                egui::CentralPanel::default().show(ui, |ui| {
+                    assert!(!openetv::grid::editor(ui, "engine", table, None, false).unwrap());
+                });
+            },
+            tables[0].clone(),
+        );
+    h.run();
+    h.get_by_label("3D map").click();
+    h.run();
+    for (i, table) in tables.into_iter().enumerate() {
+        *h.state_mut() = table.clone();
+        h.run();
+        assert_eq!(h.state(), &table);
+        assert!(h.query_by_label("3D map surface").is_some());
+        if let Some(dir) = std::env::var_os("OPENETV_PICTURES") {
+            picture::picture(
+                &h,
+                &collector,
+                &std::path::PathBuf::from(dir).join(format!("surface-light-{i}.png")),
+                1.,
+            );
+        }
+    }
+}

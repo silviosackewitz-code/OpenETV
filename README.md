@@ -16,6 +16,7 @@ The five sidebar steps are Engine torque, Torque request, Calculation, ETV map a
 - Generate a power-shaped or custom S-curve request, with explicit absolute-torque or per-RPM scaling. Recover a modelled torque request from an existing ETV map and the loaded engine table.
 - Edit output breakpoints individually with add/remove controls; set RPM calculation threshold and maximum-torque tolerance. Inspect saturation and out-of-range warnings.
 - Apply the low-grip zero-gas ramp, flat-spot correction or dip removal; reset to the raw calculation when needed.
+- Switch between the editable **Table** and a native **3D map** on all three maps. Rotate, tilt, zoom and inspect point values; actual breakpoint spacing and map values are preserved.
 - Read and edit coloured maps with a visible scale and chosen-cell outline. Every row is shown without a separate vertical table scrollbar; tall maps use page scrolling. Throttle maps use a fixed 0–100% scale; Nm maps use their value range. Switch between the throttle curve and requested versus modelled torque. A modelled comparison is not a measurement.
 - Save and reopen JSON `.openetv` sessions containing the inputs, settings and result. Undo and redo retain the latest 40 actions. Changed inputs mark a result stale; loaded sessions verify their saved calculation baseline before retaining result corrections.
 - Export CSV, XLSX or DSS with explicit destination and DSS table/axis paths and units.

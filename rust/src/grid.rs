@@ -36,7 +36,21 @@ pub fn editor(
     } else {
         extent(table)
     };
+    let view_key = key.with("view");
+    let mut surface = ui
+        .ctx()
+        .data_mut(|d| d.get_temp::<bool>(view_key))
+        .unwrap_or(false);
+    ui.horizontal(|ui| {
+        ui.selectable_value(&mut surface, false, "Table");
+        ui.selectable_value(&mut surface, true, "3D map");
+    });
+    ui.ctx().data_mut(|d| d.insert_temp(view_key, surface));
     legend(ui, table, low, high, unit);
+    if surface {
+        crate::surface::show(ui, id, table, low, high, unit);
+        return Ok(false);
+    }
 
     ui.collapsing("Table tools",|ui|{
         ui.horizontal_wrapped(|ui| {

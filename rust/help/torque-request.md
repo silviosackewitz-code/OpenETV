@@ -21,3 +21,5 @@ The request says how much torque the rider asks for at each RPM and grip positio
 | The same option on | Torque follows the engine's maximum at each RPM. |
 
 The curve shows the request in cyan and available engine torque in amber.
+
+Choose **3D map** above the map to rotate the full surface. **Table** returns to cell editing. See **3D maps** for the controls.

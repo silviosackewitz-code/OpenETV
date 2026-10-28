@@ -1,5 +1,15 @@
 # Native validation — 2026-10-27
 
+## OpenETV 0.5.0 — native 3D maps
+
+- 48 native tests passed. New checks cover true breakpoint spacing, signed and constant values, single-row/column maps, drag rotation, wheel zoom, reset, read-only viewing and Table/3D switching on all three maps.
+- All 375 frozen numerical cases still match in Rust and the packaged executable. Calculation code and defaults are unchanged.
+- Native screenshots cover the engine, request and ETV surfaces, light-theme line/point/flat cases, and ten concise Manual topics. Axes, colour scales and help were visually inspected.
+- Cargo fmt, Clippy with warnings denied, package signature and DMG integrity passed.
+- The installed `Developer/OpenETV_App/OpenETV.app` reports 0.5.0 and matches the packaged executable byte for byte. The previous running session was preserved pending restart.
+
+Artifact: `OpenETV-0.5.0-macOS.dmg`, SHA-256 `fc7053766c300b907af8f880e210a8c16e39c42d96c167665558a4ec9a5e36a0`.
+
 ## OpenETV 0.4.1 — macOS / Apple Silicon
 
 - 45 native tests passed, including individual breakpoint editing, insertion, removal, duplicate prevention, undo, project round trips and generator/calculation agreement.

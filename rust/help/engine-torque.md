@@ -18,3 +18,5 @@ This table describes the engine: each cell is torque in Nm at one RPM and thrott
 | RPM picker above the curve | The row drawn in the chart. |
 
 Use measured data for the engine and configuration you are working on. The startup table is a synthetic example.
+
+Choose **3D map** above the map to rotate the full surface. **Table** returns to cell editing. See **3D maps** for the controls.
