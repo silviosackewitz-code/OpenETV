@@ -20,6 +20,7 @@ case "$(uname -s)" in
     cp "$build_dir/release/openetv" "$app/Contents/MacOS/OpenETV"
     cp packaging/icon/app-icon.icns "$app/Contents/Resources/app-icon.icns"
     cp LICENSE rust/MANUAL.md "$app/Contents/Resources/"
+    cp -R rust/help "$app/Contents/Resources/help"
     cp -R rust/assets/look "$app/Contents/Resources/third-party-look"
     cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -53,6 +54,7 @@ PLIST
     mkdir "$work/OpenETV"
     cp "$build_dir/release/openetv" "$work/OpenETV/OpenETV"
     cp rust/MANUAL.md LICENSE "$work/OpenETV/"
+    cp -R rust/help "$work/OpenETV/help"
     cp -R rust/assets/look "$work/OpenETV/third-party-look"
     rm -rf "$target/OpenETV"
     mv "$work/OpenETV" "$target/OpenETV"

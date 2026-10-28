@@ -341,6 +341,8 @@ pub struct App {
     appearance: Appearance,
     appearance_open: bool,
     manual_open: bool,
+    manual_topic: usize,
+    result_view: usize,
     principle_open: bool,
     probe_rpm: f64,
     probe_grip: f64,
@@ -369,6 +371,8 @@ impl App {
             appearance: Appearance::default(),
             appearance_open: false,
             manual_open: false,
+            manual_topic: 0,
+            result_view: 0,
             principle_open: false,
             probe_rpm: 7000.,
             probe_grip: 50.,
@@ -619,7 +623,7 @@ impl App {
         egui::Panel::top("toolbar").show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.strong("OpenETV");
-                ui.label("Native");
+                ui.weak(concat!("v", env!("CARGO_PKG_VERSION")));
                 ui.separator();
                 if ui.button("Open project…").clicked() {
                     if self.dirty {
@@ -677,7 +681,13 @@ impl App {
                 .iter()
                 .enumerate()
                 {
-                    if ui.selectable_label(self.step == n, *label).clicked() {
+                    if ui
+                        .add_sized(
+                            [172., 36.],
+                            egui::Button::new(*label).selected(self.step == n),
+                        )
+                        .clicked()
+                    {
                         self.step = n;
                         self.row = 0;
                     }
@@ -687,7 +697,12 @@ impl App {
                 if ui.button("How it works").clicked() {
                     self.principle_open = true;
                 }
-                if ui.button("Manual").clicked() {
+                if ui
+                    .button("Manual")
+                    .on_hover_text("Shows how OpenETV works.")
+                    .clicked()
+                {
+                    self.manual_topic = 0;
                     self.manual_open = true;
                 }
                 if ui.button("Appearance").clicked() {
@@ -704,23 +719,50 @@ impl App {
                     });
                 }
             });
-        egui::CentralPanel::default().show(ui, |ui| {
-            egui::ScrollArea::vertical()
-                .id_salt("page")
-                .show(ui, |ui| match self.step {
-                    0 => self.engine_page(ui),
-                    1 => self.request_page(ui),
-                    2 => self.calculation_page(ui),
-                    3 => self.result_page(ui),
-                    _ => self.export_page(ui),
-                });
-        });
+        egui::CentralPanel::default()
+            .frame(egui::Frame::central_panel(ui.style()).inner_margin(18))
+            .show(ui, |ui| {
+                egui::ScrollArea::vertical()
+                    .id_salt("page")
+                    .show(ui, |ui| match self.step {
+                        0 => self.engine_page(ui),
+                        1 => self.request_page(ui),
+                        2 => self.calculation_page(ui),
+                        3 => self.result_page(ui),
+                        _ => self.export_page(ui),
+                    });
+            });
         self.windows(&ctx);
     }
+    fn page_heading(&mut self, ui: &mut egui::Ui, title: &str, subtitle: &str) {
+        ui.horizontal(|ui| {
+            ui.heading(title);
+            if ui
+                .button("?")
+                .on_hover_text(format!("Help for {title}"))
+                .clicked()
+            {
+                self.manual_topic = self.step + 1;
+                self.manual_open = true;
+            }
+        });
+        ui.label(subtitle);
+        ui.add_space(8.);
+        let (bar, _) = ui.allocate_exact_size(egui::vec2(64., 3.), egui::Sense::hover());
+        let color = look::theme::applied(ui.ctx())
+            .map(|look| look.palette().accent)
+            .unwrap_or(ui.visuals().hyperlink_color);
+        ui.painter().rect_filled(bar, 1., color);
+        ui.add_space(10.);
+    }
     fn engine_page(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Engine torque");
-        ui.label("RPM × throttle position → torque in Nm");
-        ui.label(&self.session.engine_name);
+        self.page_heading(
+            ui,
+            "Engine torque",
+            "RPM × throttle position → torque in Nm",
+        );
+        ui.weak(&self.session.engine_name);
+        ui.add_space(10.);
         ui.horizontal(|ui| {
             if ui.button("Import engine table…").clicked() {
                 self.import_file(ImportRole::Engine);
@@ -731,14 +773,18 @@ impl App {
             }
         });
         self.edit(ui, false);
-        egui::CollapsingHeader::new("Heatmap")
-            .show(ui, |ui| crate::grid::heatmap(ui, &self.session.engine));
+        ui.add_space(14.);
+        ui.strong("Torque curve");
         crate::grid::chart(ui, &self.session.engine, &mut self.row, None, "Nm");
     }
     fn request_page(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Torque request");
-        ui.label("RPM × pedal position → requested torque in Nm");
-        ui.label(&self.session.request_name);
+        self.page_heading(
+            ui,
+            "Torque request",
+            "RPM × pedal position → requested torque in Nm",
+        );
+        ui.weak(&self.session.request_name);
+        ui.add_space(10.);
         ui.horizontal_wrapped(|ui| {
             if ui.button("Import request…").clicked() {
                 self.import_file(ImportRole::Request);
@@ -750,7 +796,7 @@ impl App {
         let before = self.session.clone();
         let s = &mut self.session.settings;
         let mut generate = false;
-        egui::CollapsingHeader::new("Generate a torque request").default_open(true).show(ui,|ui|{
+        egui::CollapsingHeader::new("Generate a torque request").show(ui,|ui|{
             ui.horizontal_wrapped(|ui|{egui::ComboBox::from_label("Shape").selected_text(["Cable-like","Linear","Corner exit","Custom power","S-curve"][s.shape.min(4)]).show_ui(ui,|ui|{for(i,label)in ["Cable-like","Linear","Corner exit","Custom power","S-curve"].iter().enumerate(){ui.selectable_value(&mut s.shape,i,*label);}});
             if s.shape==3{ui.add(egui::DragValue::new(&mut s.exponent).range(0.05..=10.).speed(0.05).prefix("Exponent "));}
             if s.shape==4{ui.add(egui::DragValue::new(&mut s.center).range(1. ..=99.).prefix("Fine zone % "));ui.add(egui::DragValue::new(&mut s.steepness).range(0.5..=50.).speed(0.1).prefix("Sharpness "));}
@@ -774,14 +820,16 @@ impl App {
                     .collect(),
             ],
         };
-        ui.small("Shape preview · requested share of maximum torque (%)");
-        crate::grid::chart(ui, &preview, &mut 0, None, "%");
+        egui::CollapsingHeader::new("Shape preview").show(ui, |ui| {
+            ui.small("Requested share of maximum torque (%)");
+            crate::grid::chart(ui, &preview, &mut 0, None, "%");
+        });
         if generate {
             self.operation(Session::generate);
         }
         self.edit(ui, true);
-        egui::CollapsingHeader::new("Heatmap")
-            .show(ui, |ui| crate::grid::heatmap(ui, &self.session.request));
+        ui.add_space(14.);
+        ui.strong("Request and available torque");
         let max = available(&self.session.engine, &self.session.request);
         ui.small("Cyan: requested torque · amber: available engine torque");
         crate::grid::chart(ui, &self.session.request, &mut self.row, Some(&max), "Nm");
@@ -819,8 +867,11 @@ impl App {
         }
     }
     fn calculation_page(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Calculation");
-        ui.label("Read the engine curve backwards: which throttle opening delivers the requested torque?");
+        self.page_heading(
+            ui,
+            "Calculation",
+            "Choose the output grid and calculate the throttle target.",
+        );
         let before = self.session.clone();
         let s = &mut self.session.settings;
         ui.add_space(12.);
@@ -859,8 +910,7 @@ impl App {
         self.principle(ui);
     }
     fn result_page(&mut self, ui: &mut egui::Ui) {
-        ui.heading("ETV map");
-        ui.label("RPM × pedal position → throttle target in %");
+        self.page_heading(ui, "ETV map", "RPM × pedal position → throttle target in %");
         if self.session.result.is_none() {
             ui.label("Calculate a map first.");
             if ui.button("Go to calculation").clicked() {
@@ -948,9 +998,17 @@ impl App {
             ));
         }
         ui.small("Cell symbols describe the original inversion. Corrections may change the torque delivered.");
-        egui::CollapsingHeader::new("Heatmap").show(ui, |ui| crate::grid::heatmap(ui, &r.table));
-        crate::grid::chart(ui, &r.table, &mut self.row, None, "% throttle");
-        if let Ok(actual) = model::request_from_etv(&self.session.engine, &r.table) {
+        ui.add_space(14.);
+        ui.horizontal(|ui| {
+            ui.selectable_value(&mut self.result_view, 0, "Throttle curve");
+            ui.selectable_value(&mut self.result_view, 1, "Torque comparison");
+        });
+        if self.result_view == 0 {
+            crate::grid::chart(ui, &r.table, &mut self.row, None, "% throttle");
+        }
+        if self.result_view == 1
+            && let Ok(actual) = model::request_from_etv(&self.session.engine, &r.table)
+        {
             let mut worst = 0f64;
             for (i, rpm) in actual.rpm.iter().enumerate() {
                 for (j, grip) in actual.axis.iter().enumerate() {
@@ -977,7 +1035,11 @@ impl App {
         }
     }
     fn export_page(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Export");
+        self.page_heading(
+            ui,
+            "Export",
+            "Save the throttle target for your ECU workflow.",
+        );
         ui.label("A calculated map is a first attempt. Verify it on the dyno, pedal position by pedal position, before anyone rides it.");
         ui.horizontal(|ui| {
             for (i, name) in ["CSV", "Excel (.xlsx)", "Mectronik (.dss)"]
@@ -1132,21 +1194,9 @@ impl App {
         if self.manual_open {
             egui::Window::new("OpenETV manual")
                 .open(&mut self.manual_open)
-                .default_size([720., 600.])
-                .show(ctx, |ui| {
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-                        for line in crate::manual::MANUAL.lines() {
-                            if let Some(h) = line.strip_prefix("# ") {
-                                ui.heading(h);
-                            } else if let Some(h) = line.strip_prefix("## ") {
-                                ui.add_space(12.);
-                                ui.strong(h);
-                            } else {
-                                ui.label(line);
-                            }
-                        }
-                    });
-                });
+                .default_size([720., 640.])
+                .min_width(520.)
+                .show(ctx, |ui| crate::manual::show(ui, &mut self.manual_topic));
         }
         if self.principle_open {
             let mut open = true;

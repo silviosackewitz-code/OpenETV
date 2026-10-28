@@ -17,6 +17,7 @@ try {
     New-Item -ItemType Directory -Force $app, $target | Out-Null
     Copy-Item $binary (Join-Path $app "OpenETV.exe")
     Copy-Item "rust\MANUAL.md", "LICENSE" $app
+    Copy-Item -Recurse "rust\help" (Join-Path $app "help")
     Copy-Item -Recurse "rust\assets\look" (Join-Path $app "third-party-look")
     $destination = Join-Path $target "OpenETV"
     if (Test-Path $destination) { Remove-Item -Recurse -Force $destination }

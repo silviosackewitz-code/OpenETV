@@ -126,3 +126,68 @@ fn verified_projects_keep_corrections_but_mismatched_baselines_stay_stale() {
     assert!(!stale.fresh());
     assert_eq!(stale.result.unwrap().table, s.result.unwrap().table);
 }
+
+#[test]
+fn contextual_manual_and_result_views() {
+    let mut app = App::new();
+    app.session.calculate().unwrap();
+    app.step = 3;
+    let mut h = Harness::builder()
+        .with_size(egui::vec2(1400., 1000.))
+        .build_ui_state(|ui, app: &mut App| app.show(ui), app);
+    h.run();
+    let before = h.state().session.result.clone();
+    h.get_by_label("Torque comparison").click();
+    h.run();
+    assert!(h.query_by_label("Cyan: modelled torque · amber: requested torque. This is a model comparison, not a dyno measurement.").is_some());
+    h.get_by_label("?").click();
+    h.run();
+    assert!(h.query_by_label("Corrections").is_some());
+    assert!(h.query_by_label("Read the result").is_some());
+    assert_eq!(
+        serde_json::to_value(before).unwrap(),
+        serde_json::to_value(&h.state().session.result).unwrap()
+    );
+}
+
+#[test]
+fn help_pages_and_light_map_pictures() {
+    let Some(dir) = std::env::var_os("OPENETV_PICTURES") else {
+        return;
+    };
+    let dir = std::path::PathBuf::from(dir);
+    let collector = picture::Collector::default();
+    let mut h = Harness::builder()
+        .with_size(egui::vec2(780., 760.))
+        .renderer(collector.clone())
+        .build_ui_state(
+            |ui, topic: &mut usize| {
+                let ready = openetv::look::theme::applied(ui.ctx()).is_some();
+                openetv::look::apply(ui.ctx(), "light", [212, 0, 0]);
+                if ready {
+                    egui::CentralPanel::default().show(ui, |ui| openetv::manual::show(ui, topic));
+                }
+            },
+            0usize,
+        );
+    for topic in 0..openetv::manual::PAGES.len() {
+        *h.state_mut() = topic;
+        h.run();
+        picture::picture(&h, &collector, &dir.join(format!("manual-{topic}.png")), 1.);
+    }
+    let collector = picture::Collector::default();
+    let mut h = Harness::builder()
+        .with_size(egui::vec2(1100., 700.))
+        .renderer(collector.clone())
+        .build_ui_state(
+            |ui, table: &mut model::Table| {
+                openetv::look::apply(ui.ctx(), "light", [212, 0, 0]);
+                egui::CentralPanel::default().show(ui, |ui| {
+                    openetv::grid::editor(ui, "engine", table, None, false).unwrap();
+                });
+            },
+            Session::sample().engine,
+        );
+    h.run();
+    picture::picture(&h, &collector, &dir.join("light-map.png"), 1.);
+}

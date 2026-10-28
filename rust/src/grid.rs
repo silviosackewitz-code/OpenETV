@@ -30,10 +30,18 @@ pub fn editor(
         .data_mut(|d| d.get_temp::<(usize, usize, f64)>(tools_id))
         .unwrap_or((0, 0, 0.0));
     let mut tools_error = None;
+    let unit = if status.is_some() { "% throttle" } else { "Nm" };
+    let (low, high) = if status.is_some() {
+        (0., 100.)
+    } else {
+        extent(table)
+    };
+    legend(ui, table, low, high, unit);
+
     ui.collapsing("Table tools",|ui|{
         ui.horizontal_wrapped(|ui| {
             if ui.button("Copy table").clicked() {
-                let mut text=String::from("RPM\\Grip[%]");
+                let mut text=String::from(if id == "engine" { "RPM\\Throttle[%]" } else { "RPM\\Grip[%]" });
                 for x in &table.axis {text.push_str(&format!("\t{x}"));}
                 for (rpm,row) in table.rpm.iter().zip(&table.values) {text.push_str(&format!("\n{rpm}"));for x in row{text.push_str(&format!("\t{x}"));}}
                 ui.ctx().copy_text(text);
@@ -69,23 +77,86 @@ pub fn editor(
         *table = Table::new(draft.rpm, draft.axis, draft.values)?;
         return Ok(true);
     }
-    egui::ScrollArea::both().id_salt((id,"scroll")).max_height(340.0).show(ui,|ui|{
-        egui::Grid::new((id,"cells")).striped(true).spacing([5.0,4.0]).show(ui,|ui|{
-            let corner=ui.selectable_label(selected==(0,0),"RPM / %"); if corner.clicked(){selected=(0,0);corner.request_focus();ui.ctx().data_mut(|d|d.insert_temp(active,(key,corner.id)));}
-            for j in 0..draft.axis.len(){cell(ui,&mut draft.axis[j],(0,j+1),&mut selected,key,active,!axes_editable,&format!("Column {} breakpoint percent",j+1),&mut changed);}
-            ui.end_row();
-            for i in 0..draft.rpm.len(){
-                cell(ui,&mut draft.rpm[i],(i+1,0),&mut selected,key,active,!axes_editable,&format!("Row {} RPM",i+1),&mut changed);
-                for j in 0..draft.axis.len(){
-                    ui.horizontal(|ui|{
-                        cell(ui,&mut draft.values[i][j],(i+1,j+1),&mut selected,key,active,read_only,&format!("Value at {} RPM, {} percent",table.rpm[i],table.axis[j]),&mut changed);
-                        if let Some(s)=status.and_then(|rows|rows.get(i)).and_then(|row|row.get(j)) {let (symbol,tip)=match s{Status::Ok=>("","Torque request reached"),Status::Saturated=>("▲","Torque saturated"),Status::BelowMin=>("▽","Below closed-throttle torque"),Status::NonMonotonic=>("!","Engine torque falls below the request at a larger opening")};ui.add_sized([10.,18.],egui::Label::new(egui::RichText::new(symbol).small())).on_hover_text(tip);}
-                    });
-                }
-                ui.end_row();
-            }
+    egui::ScrollArea::both()
+        .id_salt((id, "scroll"))
+        .max_height(420.0)
+        .show(ui, |ui| {
+            egui::Grid::new((id, "cells"))
+                .spacing([2.0, 2.0])
+                .show(ui, |ui| {
+                    let corner = ui.add_sized(
+                        [80., 28.],
+                        egui::Button::new("RPM / %").selected(selected == (0, 0)),
+                    );
+                    if corner.clicked() {
+                        selected = (0, 0);
+                        corner.request_focus();
+                        ui.ctx()
+                            .data_mut(|d| d.insert_temp(active, (key, corner.id)));
+                    }
+                    for j in 0..draft.axis.len() {
+                        cell(
+                            ui,
+                            &mut draft.axis[j],
+                            (0, j + 1),
+                            &mut selected,
+                            key,
+                            active,
+                            !axes_editable,
+                            &format!("Column {} breakpoint percent", j + 1),
+                            &mut changed,
+                            None,
+                            None,
+                        );
+                    }
+                    ui.end_row();
+                    for i in 0..draft.rpm.len() {
+                        cell(
+                            ui,
+                            &mut draft.rpm[i],
+                            (i + 1, 0),
+                            &mut selected,
+                            key,
+                            active,
+                            !axes_editable,
+                            &format!("Row {} RPM", i + 1),
+                            &mut changed,
+                            None,
+                            None,
+                        );
+                        for j in 0..draft.axis.len() {
+                            let color = crate::look::map_color(draft.values[i][j], low, high);
+                            cell(
+                                ui,
+                                &mut draft.values[i][j],
+                                (i + 1, j + 1),
+                                &mut selected,
+                                key,
+                                active,
+                                read_only,
+                                &format!(
+                                    "Value at {} RPM, {} percent",
+                                    table.rpm[i], table.axis[j]
+                                ),
+                                &mut changed,
+                                Some(color),
+                                status
+                                    .and_then(|rows| rows.get(i))
+                                    .and_then(|row| row.get(j)),
+                            );
+                        }
+                        ui.end_row();
+                    }
+                });
         });
-    });
+    if selected.0 > 0 && selected.1 > 0 {
+        ui.small(format!(
+            "Chosen cell: {} RPM / {}%  ·  {} {unit}  ·  Drag to adjust; double-click to type",
+            table.rpm[selected.0 - 1],
+            table.axis[selected.1 - 1],
+            table.values[selected.0 - 1][selected.1 - 1]
+        ));
+    }
     ui.ctx().data_mut(|d| d.insert_temp(key, selected));
     let owner = ui
         .ctx()
@@ -127,12 +198,68 @@ fn cell(
     read_only: bool,
     label: &str,
     changed: &mut bool,
+    color: Option<Color32>,
+    status: Option<&Status>,
 ) {
-    let response = if read_only {
-        ui.selectable_label(*selected == position, format!("{value}"))
-    } else {
-        ui.add(egui::DragValue::new(value).speed(0.1).max_decimals(4))
-    };
+    let background = color.unwrap_or(ui.visuals().widgets.inactive.bg_fill);
+    let ink = color
+        .map(crate::look::map_ink)
+        .unwrap_or(ui.visuals().text_color());
+    let chosen = *selected == position;
+    let response = egui::Frame::new()
+        .fill(background)
+        .stroke(Stroke::new(
+            1.5,
+            if chosen { ink } else { Color32::TRANSPARENT },
+        ))
+        .inner_margin(2)
+        .show(ui, |ui| {
+            let style = ui.style_mut();
+            style.visuals.override_text_color = Some(ink);
+            for visual in [
+                &mut style.visuals.widgets.inactive,
+                &mut style.visuals.widgets.hovered,
+                &mut style.visuals.widgets.active,
+                &mut style.visuals.widgets.noninteractive,
+            ] {
+                visual.bg_fill = background;
+                visual.weak_bg_fill = background;
+                visual.fg_stroke.color = ink;
+                visual.bg_stroke = Stroke::NONE;
+            }
+            let response = if read_only {
+                ui.add_sized(
+                    [73., 22.],
+                    egui::Button::new(format!("{value}")).frame(false),
+                )
+            } else {
+                ui.add_sized(
+                    [73., 22.],
+                    egui::DragValue::new(value).speed(0.1).max_decimals(4),
+                )
+            };
+            if let Some(status) = status {
+                let (symbol, tip) = match status {
+                    Status::Ok => ("", "Torque request reached"),
+                    Status::Saturated => ("▲", "Torque saturated"),
+                    Status::BelowMin => ("▽", "Below closed-throttle torque"),
+                    Status::NonMonotonic => (
+                        "!",
+                        "Engine torque falls below the request at a larger opening",
+                    ),
+                };
+                ui.painter().text(
+                    response.rect.right_top() + Vec2::new(-1., 1.),
+                    egui::Align2::RIGHT_TOP,
+                    symbol,
+                    FontId::proportional(9.),
+                    ink,
+                );
+                response.clone().on_hover_text(tip);
+            }
+            response
+        })
+        .inner;
     response
         .widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::DragValue, !read_only, label));
     let response = response.on_hover_text(label);
@@ -264,59 +391,6 @@ pub fn chart(
     ));
 }
 
-pub fn heatmap(ui: &mut egui::Ui, table: &Table) {
-    if table.validate().is_err() {
-        return;
-    }
-    let min = table
-        .values
-        .iter()
-        .flatten()
-        .copied()
-        .fold(f64::INFINITY, f64::min);
-    let max = table
-        .values
-        .iter()
-        .flatten()
-        .copied()
-        .fold(f64::NEG_INFINITY, f64::max);
-    let width = (ui.available_width() / table.axis.len() as f32).clamp(4.0, 24.0);
-    let size = Vec2::new(
-        width * table.axis.len() as f32,
-        12.0 * table.rpm.len() as f32,
-    );
-    let (rect, response) = ui.allocate_exact_size(size, Sense::hover());
-    let painter = ui.painter_at(rect);
-    for (i, row) in table.values.iter().enumerate() {
-        for (j, &value) in row.iter().enumerate() {
-            let f = ((value - min) / (max - min).max(f64::EPSILON)) as f32;
-            let cell = Rect::from_min_size(
-                rect.min + Vec2::new(j as f32 * width, i as f32 * 12.0),
-                Vec2::new(width, 12.0),
-            );
-            painter.rect_filled(
-                cell,
-                0.0,
-                Color32::from_rgb(
-                    (35.0 + 200.0 * f) as u8,
-                    (90.0 + 70.0 * (1.0 - f)) as u8,
-                    (210.0 - 160.0 * f) as u8,
-                ),
-            );
-        }
-    }
-    if let Some(p) = response.hover_pos() {
-        let i = ((p.y - rect.top()) / 12.0) as usize;
-        let j = ((p.x - rect.left()) / width) as usize;
-        if let Some(value) = table.values.get(i).and_then(|r| r.get(j)) {
-            response.on_hover_text(format!(
-                "{} RPM · {}% · {}",
-                table.rpm[i], table.axis[j], value
-            ));
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -334,7 +408,6 @@ mod tests {
             egui::CentralPanel::default().show(ui, |ui| {
                 assert!(!editor(ui, "smoke", &mut table, None, false).unwrap());
                 chart(ui, &table, &mut row, Some(&table), "Nm");
-                heatmap(ui, &table);
             });
         });
         assert!(!output.shapes.is_empty());
@@ -482,4 +555,41 @@ mod operation_tests {
         assert!(bulk(&t, (1, 1), 0, 3, 0.).is_err());
         assert!(bulk(&t, (1, 1), 1, 2, f64::MAX).is_err());
     }
+}
+
+fn extent(table: &Table) -> (f64, f64) {
+    table
+        .values
+        .iter()
+        .flatten()
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &v| {
+            (lo.min(v), hi.max(v))
+        })
+}
+fn legend(ui: &mut egui::Ui, table: &Table, low: f64, high: f64, unit: &str) {
+    ui.add_space(10.);
+    ui.horizontal_wrapped(|ui| {
+        ui.strong(format!("{} × {}", table.rpm.len(), table.axis.len()));
+        ui.label(format!(
+            "{}–{} RPM",
+            table.rpm[0],
+            table.rpm.last().unwrap()
+        ));
+        ui.separator();
+        ui.label(format!("{low:.1} {unit}"));
+        let (rect, _) = ui.allocate_exact_size(Vec2::new(140., 12.), Sense::hover());
+        for i in 0..70 {
+            let part =
+                Rect::from_min_size(rect.min + Vec2::new(i as f32 * 2., 0.), Vec2::new(2., 12.));
+            ui.painter()
+                .rect_filled(part, 0., crate::look::map_color(i as f64, 0., 69.));
+        }
+        ui.label(format!("{high:.1} {unit}"));
+        ui.weak(if unit == "Nm" {
+            "Map range"
+        } else {
+            "Fixed scale"
+        });
+    });
+    ui.add_space(6.);
 }

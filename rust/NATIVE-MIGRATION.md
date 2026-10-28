@@ -30,3 +30,11 @@ This migration does not add hardware control, automatic ECU flashing, guessed ac
 [MoTeC package release notes](https://moteconline.motec.com.au/Package/ViewVariant?PackageVariantId=4982) distinguish a pedal torque aim referencing current maximum torque from one referencing a torque limit. These are different behaviours; generator modes therefore need explicit labels. These notes describe a specific package, not every MoTeC firmware.
 
 [Haltech torque management](https://support.haltech.com/portal/en/kb/articles/torque-management-elite) describes a drag-racing RPM control strategy. Its similarly named function is not evidence for changing OpenETV's table inversion or calibration values.
+
+## Rust-only maintenance (0.4.0)
+
+The previous browser application, Python runtime and development environment, legacy packaging and archived browser documentation have been removed. Numerical compatibility now uses 375 distinct frozen synthetic cases in the native test suite. Private reference documents and ECU exports remain ignored.
+
+Editable cells now carry the map colours and a visible value scale. Input torque uses the map's range; output throttle uses 0–100%. Warning symbols remain separate from the value colours. Generator controls and shape preview are collapsed until needed, and the result's two plots share a view selector.
+
+The Manual follows the current Race Analysis writing standards: short task pages, operating tables and a separate calculation reference, with the same Manual label and contextual help marks. No original manual text or calibration values are copied into the product.

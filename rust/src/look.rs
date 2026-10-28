@@ -66,3 +66,49 @@ mod tests {
         }
     }
 }
+
+/// A common low-to-high scale for map values, independent of warnings and the UI theme.
+pub fn map_color(value: f64, low: f64, high: f64) -> Color32 {
+    let t = if high > low {
+        ((value - low) / (high - low)).clamp(0., 1.)
+    } else {
+        0.5
+    };
+    let stops = [
+        [65., 119., 196.],
+        [65., 184., 188.],
+        [159., 207., 126.],
+        [241., 198., 92.],
+        [229., 108., 91.],
+    ];
+    let x = t * 4.;
+    let i = (x.floor() as usize).min(3);
+    let f = x - i as f64;
+    let rgb: [u8; 3] =
+        std::array::from_fn(|c| (stops[i][c] + f * (stops[i + 1][c] - stops[i][c])).round() as u8);
+    Color32::from_rgb(rgb[0], rgb[1], rgb[2])
+}
+pub fn map_ink(color: Color32) -> Color32 {
+    let hex = format!("#{:02x}{:02x}{:02x}", color.r(), color.g(), color.b());
+    if accent::contrast(&hex, "#000000") >= accent::contrast(&hex, "#ffffff") {
+        Color32::BLACK
+    } else {
+        Color32::WHITE
+    }
+}
+#[cfg(test)]
+mod map_tests {
+    use super::*;
+    #[test]
+    fn readable_map_scale_and_constant_maps() {
+        for i in 0..=100 {
+            let bg = map_color(i as f64, 0., 100.);
+            let fg = map_ink(bg);
+            let hex = |c: Color32| format!("#{:02x}{:02x}{:02x}", c.r(), c.g(), c.b());
+            assert!(accent::contrast(&hex(bg), &hex(fg)) >= 4.5);
+        }
+        assert_eq!(map_color(7., 7., 7.), map_color(50., 0., 100.));
+        assert_eq!(map_color(-10., 0., 100.), map_color(0., 0., 100.));
+        assert_eq!(map_color(110., 0., 100.), map_color(100., 0., 100.));
+    }
+}

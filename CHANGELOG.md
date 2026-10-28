@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+- Remove the former HTML/JavaScript/Python application, tooling, packaging and archived manual. Build and test only Rust.
+- Preserve 375 distinct synthetic numerical regression cases as native test data.
+- Colour editable map cells, show a value legend and chosen-cell outline, and keep throttle colours on a fixed 0–100% scale.
+- Give navigation clearer spacing; keep the request map visible ahead of optional generator and preview controls.
+- Switch the result chart between throttle and torque comparison.
+- Add nine concise offline Manual topics and contextual help, following the Race Analysis writing conventions.
+
 ## 0.3.0
 
 - Replace the Python/browser desktop runtime with a Rust/egui native application while retaining the Python calculation as a numerical reference.

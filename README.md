@@ -10,13 +10,13 @@ The original EGEA Bike Torque Tool was developed by Stéphane Egea of EGEA Engin
 
 ## Using the app
 
-The five sidebar steps are Engine torque, Torque request, Calculation, ETV map and Export. The embedded manual is available in the window and as [rust/MANUAL.md](rust/MANUAL.md).
+The five sidebar steps are Engine torque, Torque request, Calculation, ETV map and Export. **Manual** opens short task and reference pages; **?** beside a page title opens help for that step. The same pages are available from [rust/MANUAL.md](rust/MANUAL.md).
 
 - Import CSV, XLSX or Mectronik DSS tables; select a table from a multi-table file and edit cells directly.
 - Generate a power-shaped or custom S-curve request, with explicit absolute-torque or per-RPM scaling. Recover a modelled torque request from an existing ETV map and the loaded engine table.
 - Set output breakpoints, RPM calculation threshold and maximum-torque tolerance. Inspect saturation and out-of-range warnings.
 - Apply the low-grip zero-gas ramp, flat-spot correction or dip removal; reset to the raw calculation when needed.
-- Inspect heatmaps and line charts, available engine torque, and requested versus modelled torque. A modelled comparison is not a measurement.
+- Read and edit coloured maps with a visible scale and chosen-cell outline. Throttle maps use a fixed 0–100% scale; Nm maps use their value range. Switch between the throttle curve and requested versus modelled torque. A modelled comparison is not a measurement.
 - Save and reopen JSON `.openetv` sessions containing the inputs, settings and result. Undo and redo retain the latest 40 actions. Changed inputs mark a result stale; loaded sessions verify their saved calculation baseline before retaining result corrections.
 - Export CSV, XLSX or DSS with explicit destination and DSS table/axis paths and units.
 

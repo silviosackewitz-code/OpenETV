@@ -10,8 +10,12 @@ blending can differ slightly from the actual GPU-rendered app.
 
 ## ETV result
 
-![Compact result table, calculation diagnostics and curves](result.png)
+![Coloured editable map, calculation diagnostics and curve](result.png)
 
 ## Working principle
 
 ![Interactive pedal-to-torque-to-throttle explanation](principle.png)
+
+## Contextual manual
+
+![Short ETV map operating reference](manual.png)
