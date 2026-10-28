@@ -1,33 +1,6 @@
 use super::*;
 use std::collections::HashMap;
 
-/// The roles of one block of theme.css, `--name` → value.
-fn block(css: &str, selector: &str) -> HashMap<String, String> {
-    let start = css
-        .find(selector)
-        .unwrap_or_else(|| panic!("theme.css has {selector}"));
-    let open = start + css[start..].find('{').unwrap() + 1;
-    let body = &css[open..open + css[open..].find('}').unwrap()];
-    let mut roles = HashMap::new();
-    // Comments may hold `:` and `;` too.
-    let mut text = String::new();
-    let mut rest = body;
-    while let Some(open) = rest.find("/*") {
-        text.push_str(&rest[..open]);
-        rest = &rest[open + rest[open..].find("*/").unwrap() + 2..];
-    }
-    text.push_str(rest);
-    for declaration in text.split(';') {
-        if let Some((name, value)) = declaration.split_once(':') {
-            let name = name.trim();
-            if name.starts_with("--") {
-                roles.insert(name.to_string(), value.trim().to_string());
-            }
-        }
-    }
-    roles
-}
-
 fn parsed(value: &str) -> Color32 {
     super::colour(value).unwrap_or_else(|| panic!("a colour: {value}"))
 }
@@ -49,10 +22,11 @@ fn roles(p: &Palette) -> [(&'static str, Color32); 11] {
 }
 
 #[test]
-fn the_dark_and_light_roles_equal_theme_css() {
-    let css = include_str!("../../assets/look/theme-reference.css");
-    let light = block(css, ":root{");
-    let dark = block(css, ":root[data-theme=\"dark\"]");
+fn the_dark_and_light_roles_match_the_shared_palette() {
+    let reference: HashMap<String, HashMap<String, String>> =
+        serde_json::from_str(include_str!("../../tests/fixtures/theme-roles.json")).unwrap();
+    let light = &reference["light"];
+    let dark = &reference["dark"];
     for (palette, css_roles, name) in [(LIGHT, &light, "light"), (DARK, &dark, "dark")] {
         for (role, ours) in roles(&palette) {
             let theirs = css_roles

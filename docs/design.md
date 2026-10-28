@@ -6,10 +6,10 @@ The four concrete themes are Dark, Light, Industrial and Terminal. System follow
 
 Use semantic palette roles for controls. Cyan and amber identify labelled chart series on the dark scope; table heatmaps encode data, so they are separate from the appearance accent. Never rely on colour alone to explain warnings or the meaning of a series.
 
-Changes to shared appearance belong upstream first and are copied here with provenance and licences. Existing focused tests retain palette/CSS comparisons, contrast, system selection, font rendering and icon glyph checks. Native window inspection remains necessary for layout and interaction.
+Changes to shared appearance belong upstream first and are copied here with provenance and licences. Existing focused tests retain palette regression checks, contrast, system selection, font rendering and icon glyph checks. Native window inspection remains necessary for layout and interaction.
 
 Preferences live in `~/.openetv/prefs.json`; `OPENETV_HOME` selects a separate directory for verification. Save new appearance fields without dropping unrelated legacy keys.
 
-## Legacy interface
+## Native help
 
-The files under `tools/etvlib/` retain the previous browser appearance and its old sync mechanism for historical reference. They are not loaded by the Rust application. The archived interface manual remains in `docs/manual/`; the native manual is `rust/MANUAL.md` and is embedded in the executable.
+The native help is embedded from Markdown pages in `rust/help/`. The shared palette reference is stored as JSON test data; no browser assets or Python tools remain.

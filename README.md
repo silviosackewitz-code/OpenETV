@@ -43,12 +43,7 @@ cargo test --manifest-path rust/Cargo.toml --locked -j3
 cargo build --manifest-path rust/Cargo.toml --locked -j3
 ```
 
-The Python implementation remains as a numerical reference, not the desktop runtime. To run the reference checks, create a virtual environment, install `numpy openpyxl xlrd pytest`, and run:
-
-```sh
-.venv/bin/python -m pytest tools/tests/test_core.py tools/tests/test_curves.py tools/tests/test_tables.py tools/tests/test_dss.py
-.venv/bin/python rust/verify_reference.py --reference . --binary rust/target/debug/openetv
-```
+The native suite includes 375 frozen numerical cases from the previous implementation, using only synthetic inputs. Calculation, generation, reverse lookup and corrections are checked without a second runtime.
 
 Original ECU fixtures in `.reference/` are private and optional; public CI uses sample and synthetic data. Never publish private fixtures or their values.
 
@@ -74,7 +69,7 @@ Engine braking, cylinder cut, torque-per-gear and gearbox import, constant-power
 
 Imports are limited to 16 MB and tables to 20,000 cells.
 
-See [rust/NATIVE-MIGRATION.md](rust/NATIVE-MIGRATION.md) for the native migration and public research sources. [docs/manual](docs/manual/README.md) retains the previous browser interface documentation as an archive.
+See [rust/NATIVE-MIGRATION.md](rust/NATIVE-MIGRATION.md) for the native migration and public research sources.
 
 Local verification is recorded in [docs/native/validation.md](docs/native/validation.md); [native screenshots](docs/native/README.md) show the rebuilt interface.
 

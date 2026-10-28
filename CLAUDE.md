@@ -1,6 +1,6 @@
 # OpenETV - working conventions
 
-OpenETV is a Rust/egui desktop application. The Python calculation remains as a reference implementation for numerical comparisons. The former browser UI is retained as legacy source, not the app runtime.
+OpenETV is a Rust/egui desktop application. Only the native application is maintained. Frozen synthetic regression data preserves the verified numerical behaviour.
 
 ## Language and publication
 
@@ -20,8 +20,8 @@ Calculation changes affect an ECU throttle target. Keep changes to numerical beh
 - `rust/src/look/`, `rust/assets/look/`: copied RaceAnalysis/RaceDash themes, fonts and icons. Preserve provenance and licences. Make shared appearance changes upstream and copy them deliberately; do not create independent colour definitions in product pages.
 - `rust/MANUAL.md`: embedded native manual through `rust/src/manual.rs`. Every app change must update its manual text when behaviour changes.
 - `rust/NATIVE-MIGRATION.md`: native migration scope and public-source rationale.
-- `tools/etvlib/`: Python numerical reference and legacy browser application.
-- `docs/manual/`: archived browser interface manual; do not present it as the current native UI.
+- `rust/tests/fixtures/`: public synthetic numerical baselines and shared palette reference. No private ECU data.
+- Help follows the concise task/operating/technical-reference conventions in `docs/manual-writing.md`.
 
 Keep implementation small, use established helpers and avoid additional frameworks. Tables in Nm and throttle maps in percent are distinct inputs. Never silently reinterpret units or change an axis to make an import fit. Stale results must be recalculated before export. Restored results retain their corrections only after verifying the saved baseline against the current inputs.
 
@@ -29,7 +29,7 @@ Keep implementation small, use established helpers and avoid additional framewor
 
 Run `cargo fmt --manifest-path rust/Cargo.toml --check`, `cargo clippy --manifest-path rust/Cargo.toml --locked --all-targets -j3 -- -D warnings`, and `cargo test --manifest-path rust/Cargo.toml --locked -j3`.
 
-After building the debug binary, run `.venv/bin/python rust/verify_reference.py --reference . --binary rust/target/debug/openetv`. Reference-only tests are `.venv/bin/python -m pytest tools/tests/test_core.py tools/tests/test_curves.py tools/tests/test_tables.py tools/tests/test_dss.py`. Optional private ECU fixtures must stay private, including failure diagnostics. Legacy browser tests do not verify the native interface.
+Numerical baselines run as native integration tests. Optional private ECU fixtures must stay private, including failure diagnostics.
 
 UI changes require the native headless interaction tests and rendered screenshots. Check actual OS interaction before a public release; headless tests do not prove file-dialog or window-manager behaviour. Test with `OPENETV_HOME` pointing to a scratch directory to preserve personal preferences.
 

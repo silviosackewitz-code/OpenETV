@@ -21,14 +21,3 @@ jobs:
         run: cargo clippy --manifest-path rust/Cargo.toml --locked --all-targets -j3 -- -D warnings
       - name: Native tests
         run: cargo test --manifest-path rust/Cargo.toml --locked -j3
-      - name: Build reference comparison binary
-        run: cargo build --manifest-path rust/Cargo.toml --locked -j3
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-      - name: Python reference harness
-        run: |
-          python -m pip install numpy openpyxl xlrd pytest ruff==0.16.8
-          ruff check .
-          python -m pytest tools/tests/test_core.py tools/tests/test_curves.py tools/tests/test_tables.py tools/tests/test_dss.py
-          python rust/verify_reference.py --reference . --binary rust/target/debug/openetv

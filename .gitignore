@@ -1,24 +1,8 @@
-# macOS
 .DS_Store
 
-# Python
-__pycache__/
-*.py[cod]
-.venv
-# The environment of the first version; `.venv` replaces it.
-venv/
-.pytest_cache/
-.ruff_cache/
-
-# Local background material: the manual of the original tool and real ECU
-# exports. Not part of the project and not ours to publish. Tests that need
-# them skip without them.
+# Private manual and ECU exports
 reference/
 .reference/
 
-# PyInstaller build output (the .spec file itself is kept and versioned)
-build/
-dist/
-
-# Native Rust build output
+# Rust build output
 /rust/target/
