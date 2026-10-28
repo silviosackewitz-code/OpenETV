@@ -88,7 +88,7 @@ pub fn show(ui: &mut egui::Ui, id: &str, table: &Table, low: f64, high: f64, uni
         );
     });
     ui.small("Drag to rotate · scroll to zoom · hover a point for its value · edit in Table");
-    let height = (ui.ctx().content_rect().height() - 330.).clamp(300., 560.);
+    let height = (ui.clip_rect().bottom() - ui.cursor().top() - 12.).clamp(260., 560.);
     let (rect, response) =
         ui.allocate_exact_size(Vec2::new(ui.available_width(), height), Sense::drag());
     response

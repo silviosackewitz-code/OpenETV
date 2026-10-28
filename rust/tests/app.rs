@@ -317,7 +317,7 @@ fn three_dimensional_maps_are_read_only_and_render_all_roles() {
     let collector = picture::Collector::default();
     let mut h = Harness::builder()
         .with_max_steps(20)
-        .with_size(egui::vec2(1400., 1100.))
+        .with_size(egui::vec2(1400., 900.))
         .renderer(collector.clone())
         .build_ui_state(|ui, app: &mut App| app.show(ui), app);
     for step in [0, 1, 3] {
@@ -327,6 +327,7 @@ fn three_dimensional_maps_are_read_only_and_render_all_roles() {
         h.run();
         assert!(h.query_by_label("Table tools").is_none());
         let surface = h.get_by_label("3D map surface").rect();
+        assert!(surface.bottom() < h.ctx.content_rect().bottom() - 20.);
         let from = surface.center();
         let yaw = h
             .get_by_label("Rotation")
