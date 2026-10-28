@@ -10,6 +10,14 @@
 
 Windows/Linux runtime and ECU/dyno behaviour have not been validated. macOS packages are ad-hoc signed, not Apple-notarized.
 
+The packaged 0.4.1 executable passes all 375 batch cases; its ad-hoc signature and DMG integrity pass. The bundle installed at `Developer/OpenETV_App/OpenETV.app` reports 0.4.1 and matches the packaged executable byte for byte.
+
+The existing 0.4.0 window had unsaved changes and did not respond to automated save actions. Its process and original bundle were preserved. The update takes effect on the next launch; actual macOS interaction with 0.4.1 remains unchecked. Native harness interaction and rendered screenshots passed.
+
+GitHub CI passed for `a5a0728`: https://github.com/silviosackewitz-code/OpenETV/actions/runs/40644056178
+
+Artifact: `OpenETV-0.4.1-macOS.dmg`, SHA-256 `e3a98340fa09e7adedeea09f15391b8fa1e6b9fe030856ddfa5e03dc4bd631c9`.
+
 ## Previous verification — 0.4.0
 
 - 43 native tests passed. Unit and integration tests cover formats, atomic saves, project restore, calculations, clipboard editing, undo, protected result axes, contextual help and result-view switching.
